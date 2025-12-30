@@ -12,11 +12,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilo visual corporativo
+# --- SEGURIDAD Y ESTILO VISUAL ---
 st.markdown("""
     <style>
-    .stButton>button { background-color: #E60002; color: white; border-radius: 5px; width: 100%; font-weight: bold; }
-    .stMetric { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #E60002; }
+    /* 1. OCULTAR MENÚS DE BACKEND Y MARCAS DE AGUA */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stDeployButton {display:none;}
+    
+    /* 2. ESTILO CORPORATIVO */
+    .stButton>button { 
+        background-color: #E60002; 
+        color: white; 
+        border-radius: 5px; 
+        width: 100%; 
+        font-weight: bold; 
+    }
+    .stMetric { 
+        background-color: #f0f2f6; 
+        padding: 15px; 
+        border-radius: 10px; 
+        border-left: 5px solid #E60002; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -45,6 +63,7 @@ if opcion == "🔍 Consultar Puntos":
     id_busqueda = st.text_input("Ingresa tu número de cliente", placeholder="Ej: 12345678")
     
     if id_busqueda:
+        # Buscamos el ID exacto
         datos_cliente = df[df["ID_Cliente"].astype(str) == str(id_busqueda).strip()]
         if not datos_cliente.empty:
             nombre = datos_cliente["Nombre_Cliente"].iloc[0]
@@ -60,10 +79,7 @@ if opcion == "🔍 Consultar Puntos":
 # --- SECCIÓN: ¿DE QUÉ SE TRATA? ---
 elif opcion == "ℹ️ ¿De qué se trata?":
     st.subheader("Información del Programa")
-    st.write("""
-    Para conocer todos los detalles, bases y condiciones de nuestro programa de fidelidad, 
-    haz clic en el botón debajo para leer la guía oficial.
-    """)
+    st.write("Consulta las bases y condiciones de nuestro programa de fidelidad.")
     
     url_readme = "https://github.com/wurth-fidelidad-uy/mis-puntos-app/blob/main/README.md"
     st.link_button("📖 LEER REGLAMENTO COMPLETO", url_readme)
@@ -72,22 +88,20 @@ elif opcion == "ℹ️ ¿De qué se trata?":
     ---
     **Resumen rápido:**
     * Acumulas **1 punto por cada $100**.
-    * Válido en periodos especiales comunicados previamente.
     * Los puntos se canjean por premios exclusivos.
     """)
 
 # --- SECCIÓN: VER BENEFICIOS ---
 elif opcion == "🎁 Ver Beneficios":
     st.subheader("Beneficios y Premios")
-    st.write("Consulta el catálogo externo para ver los premios disponibles actualmente.")
-    
     enlace_premios = "https://www.wurth.com.uy/" 
     st.link_button("🚀 VER CATÁLOGO DE PREMIOS", enlace_premios)
 
 # --- SECCIÓN: REGISTRO STAFF ---
 elif opcion == "🏬 Registro Staff":
     st.subheader("Panel Administrativo")
-    password = st.text_input("Introduce la clave", type="password")
+    # Esta es tu barrera principal contra malintencionados
+    password = st.text_input("Introduce la clave de seguridad", type="password")
     
     if password.strip() == "089020011":
         st.success("Acceso concedido")
@@ -104,20 +118,16 @@ elif opcion == "🏬 Registro Staff":
                     nueva_fila = pd.DataFrame([[str(id_c), nom, fac, mon, puntos, date.today()]], columns=df.columns)
                     df_final = pd.concat([df, nueva_fila], ignore_index=True)
                     df_final.to_csv(DB_FILE, index=False)
-                    st.success("✅ ¡Registro exitoso!")
+                    st.success("✅ ¡Puntos registrados correctamente!")
                     st.rerun()
 
         st.divider()
         
-        # Lógica de descarga de Excel corregida
+        # Solo el staff con contraseña puede descargar la base completa
         if not df.empty:
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
             
             st.download_button(
-                label="📥 DESCARGAR EXCEL",
-                data=buffer.getvalue(),
-                file_name=f"puntos_wurth_{date.today()}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+                label="📥 DESCARGAR BASE DE DATOS (EXCEL)",
