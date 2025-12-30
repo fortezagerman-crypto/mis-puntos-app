@@ -1,16 +1,19 @@
-Sistema de Fidelidad - Würth Uruguay
+🔴 Sistema de Fidelidad - Würth Uruguay
 
-Bienvenido al Portal de Gestión de Puntos Würth, una solución digital diseñada para fortalecer el vínculo con nuestros clientes y premiar su compromiso a través de campañas de fidelización estratégicas.
+Bienvenido al Portal de Gestión de Puntos Würth, una solución digital diseñada para fortalecer el vínculo con nuestros clientes y premiar su lealtad a través de campañas de fidelización estratégicas.
+📖 Visión del Programa
 
-Sobre el Programa:
-Este programa está diseñado para que nuestros clientes acumulen beneficios tangibles durante periodos promocionales exclusivos (días, semanas o meses especiales), los cuales serán comunicados previamente a través de nuestros canales oficiales.
+Este programa está pensado para que nuestros clientes generen valor con sus compras durante periodos especiales del año (días, semanas o meses clave), los cuales serán comunicados previamente por nuestros canales oficiales.
 
-La premisa es sencilla: Cada compra realizada durante estos periodos se traduce en puntos. Estos puntos no son solo números, representan un valor real dentro de Würth Uruguay, otorgando al cliente la posibilidad de canjearlos por una selección de premios exclusivos, herramientas y beneficios de la marca.
-* Funcionalidades Principales
-* Para el Cliente: Consulta Transparente
+La idea central es que, en estos momentos destacados, cada compra acumule puntos que actúan como una "moneda de lealtad" dentro de Würth Uruguay, permitiendo a los clientes acceder a premios exclusivos y herramientas de alta gama.
+📜 Reglamento y Mecánica de Puntos
 
-Acceso Intuitivo: Consulta de saldo mediante número de ID de cliente (nombre de cliente).
-Reconocimiento Personalizado con detalle de las compras con numero de factura las cuales acumularon puntos dentro del período de ventana comercial estipulado por la empresa.
-Historial Detallado: Visualización clara de facturas registradas, fechas y puntos obtenidos en cada operación.
+Para asegurar la transparencia y claridad del programa, se establece la siguiente normativa:
 
-Calidad. Profesionalismo. Innovación. Este sistema es una herramienta más para estar cerca de quienes confían en la excelencia de nuestros productos.
+    Relación de Acumulación: Se otorgará 1 punto por cada $100 (pesos uruguayos) de compra.
+
+    Cálculo de Beneficios: El sistema procesa el monto total de la factura y asigna puntos de forma automática mediante división entera (ejemplo: una compra de $1.050 genera 10 puntos).
+
+    Vigencia de Campaña: La generación de puntos se limita estrictamente a los periodos promocionales establecidos por la empresa.
+
+    Identificación: Es indispensable el número de ID de cliente y el número de factura para la carga correcta de los beneficios.
