@@ -13,7 +13,7 @@ if os.path.exists('logo_UY.png'):
 # 2. CARGA DE DATOS
 def cargar_datos():
     if os.path.exists('base_datos_puntos.csv'):
-        # Forzamos que el ID se lea como texto para no perder los ceros a la izquierda
+        # Leemos el ID como texto para preservar ceros iniciales
         return pd.read_csv('base_datos_puntos.csv', dtype={'ID_Cliente': str})
     return pd.DataFrame(columns=["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra", "Puntos_Ganados", "Fecha"])
 
@@ -24,6 +24,7 @@ opcion = st.sidebar.radio("MENÚ", ["🔍 Consultar Puntos", "🏬 Registro Staf
 
 if opcion == "🏬 Registro Staff":
     st.subheader("Panel Administrativo")
+    # Clave de acceso: 089020011
     if st.text_input("Introduce la clave", type="password") == "089020011":
         st.success("Acceso concedido")
         
@@ -53,11 +54,9 @@ if opcion == "🏬 Registro Staff":
         
         col_desc, col_del = st.columns(2)
 
-        # 1. Botón de Descarga Excel Legible
         with col_desc:
             if not df.empty:
                 buffer = io.BytesIO()
-                # Usamos xlsxwriter para formato Excel genuino
                 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                     df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
                 
@@ -67,11 +66,47 @@ if opcion == "🏬 Registro Staff":
                     file_name=f"Base_Puntos_Wurth_{date.today()}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
-            else:
-                st.info("No hay datos para descargar.")
 
-        # 2. Botón para eliminar error
         with col_del:
             if not df.empty:
                 if st.button("🗑️ ELIMINAR ÚLTIMO REGISTRO"):
-                    df_reducido = df
+                    df_reducido = df.drop(df.index[-1])
+                    df_reducido.to_csv("base_datos_puntos.csv", index=False)
+                    st.warning("Último registro eliminado.")
+                    st.rerun()
+
+        st.write("### Vista previa de registros")
+        st.dataframe(df.sort_index(ascending=False), use_container_width=True)
+
+    elif st.session_state.get('password'):
+        st.error("Clave incorrecta")
+
+else:
+    # --- SECCIÓN DE CONSULTA PARA CLIENTES (CORREGIDA) ---
+    st.subheader("Consulta tus puntos acumulados")
+    st.write("Ingresa tu número de cliente para conocer tu saldo y beneficios.")
+    
+    # Recuperamos el campo de ID que faltaba
+    busqueda = st.text_input("Número de ID de Cliente", placeholder="Ej: 12345678")
+    
+    if busqueda:
+        # Buscamos en la base de datos comparando como texto
+        datos_cliente = df[df["ID_Cliente"].astype(str) == str(busqueda).strip()]
+        
+        if not datos_cliente.empty:
+            # Obtenemos el nombre (del primer registro que encontremos para ese ID)
+            nombre_cliente = datos_cliente["Nombre_Cliente"].iloc[0]
+            total_puntos = int(datos_cliente["Puntos_Ganados"].sum())
+            
+            # Saludo personalizado y visualización de puntos
+            st.markdown(f"## ¡Hola, **{nombre_cliente}**!")
+            st.metric("Tu saldo actual es de:", f"{total_puntos} Puntos")
+            
+            with st.expander("Ver detalle de mis compras"):
+                # Ordenamos para mostrar lo más reciente primero
+                tabla_usuario = datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False)
+                st.table(tabla_usuario)
+            
+            st.balloons()
+        else:
+            st.warning("No encontramos el ID ingresado. Por favor, verifica el número con tu vendedor.")
