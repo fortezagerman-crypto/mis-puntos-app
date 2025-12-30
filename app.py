@@ -32,7 +32,7 @@ if opcion == "🏬 Registro Staff (Interno)":
     st.subheader("Acceso Restringido")
     
     # Definimos una clave sencilla (puedes cambiarla aquí abajo)
-    CLAVE_CORRECTA = "Wurth2025" 
+    CLAVE_CORRECTA = "089020011" 
     
     password = st.text_input("Introduce la clave de vendedor", type="password")
     
