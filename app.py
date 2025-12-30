@@ -9,7 +9,7 @@ st.set_page_config(
     page_title="Puntos Würth",
     page_icon="logo_UY.png",
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # Estilo visual corporativo
@@ -29,23 +29,72 @@ DB_FILE = "base_datos_puntos.csv"
 
 def cargar_datos():
     if os.path.exists(DB_FILE):
-        # Mantenemos ID como texto para no perder ceros iniciales
         return pd.read_csv(DB_FILE, dtype={'ID_Cliente': str})
     return pd.DataFrame(columns=["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra", "Puntos_Ganados", "Fecha"])
 
 df = cargar_datos()
 
-st.title("Sistema de Fidelidad")
-opcion = st.sidebar.radio("MENÚ", ["🔍 Consultar Puntos", "🏬 Registro Staff"])
+# --- MENÚ LATERAL ---
+st.sidebar.header("MENÚ PRINCIPAL")
+opcion = st.sidebar.radio("Seleccione una opción:", 
+    ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios", "🏬 Registro Staff"])
+
+# --- SECCIÓN: CONSULTAR PUNTOS ---
+if opcion == "🔍 Consultar Puntos":
+    st.subheader("Consulta tus puntos acumulados")
+    id_busqueda = st.text_input("Ingresa tu número de cliente", placeholder="Ej: 12345678")
+    
+    if id_busqueda:
+        datos_cliente = df[df["ID_Cliente"].astype(str) == str(id_busqueda).strip()]
+        if not datos_cliente.empty:
+            nombre = datos_cliente["Nombre_Cliente"].iloc[0]
+            total = int(datos_cliente["Puntos_Ganados"].sum())
+            st.markdown(f"## ¡Hola, **{nombre}**!")
+            st.metric("Tu saldo actual es de:", f"{total} Puntos")
+            with st.expander("Ver historial de facturas"):
+                st.table(datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False))
+            st.balloons()
+        else:
+            st.warning("No se encontró el ID. Consulta con tu vendedor.")
+
+# --- SECCIÓN: ¿DE QUÉ SE TRATA? (Enlace al README) ---
+elif opcion == "ℹ️ ¿De qué se trata?":
+    st.subheader("Información del Programa")
+    st.write("""
+    Para conocer todos los detalles, bases y condiciones de nuestro programa de fidelidad, 
+    haz clic en el botón debajo para leer la guía oficial.
+    """)
+    
+    # Enlace directo al README en tu repositorio de GitHub
+    url_readme = "https://github.com/wurth-fidelidad-uy/mis-puntos-app/blob/main/README.md"
+    
+    st.link_button("📖 LEER REGLAMENTO COMPLETO", url_readme)
+    
+    st.markdown("""
+    ---
+    **Resumen rápido:**
+    * Acumulas **1 punto por cada $100**.
+    * Válido en periodos especiales comunicados previamente.
+    * Los puntos se canjean por premios exclusivos.
+    """)
+
+# --- SECCIÓN: VER BENEFICIOS ---
+elif opcion == "🎁 Ver Beneficios":
+    st.subheader("Beneficios y Premios")
+    st.write("Consulta el catálogo externo para ver los premios disponibles actualmente.")
+    
+    # Enlace a tu catálogo externo (puedes cambiarlo luego)
+    enlace_premios = "https://www.wurth.com.uy/" 
+    
+    st.link_button("🚀 VER CATÁLOGO DE PREMIOS", enlace_premios)
 
 # --- SECCIÓN: REGISTRO STAFF ---
-if opcion == "🏬 Registro Staff":
+elif opcion == "🏬 Registro Staff":
     st.subheader("Panel Administrativo")
     password = st.text_input("Introduce la clave", type="password")
     
     if password.strip() == "089020011":
         st.success("Acceso concedido")
-        
         with st.form("registro", clear_on_submit=True):
             col1, col2 = st.columns(2)
             id_c = col1.text_input("ID Cliente")
@@ -60,61 +109,11 @@ if opcion == "🏬 Registro Staff":
                     df_final = pd.concat([df, nueva_fila], ignore_index=True)
                     df_final.to_csv(DB_FILE, index=False)
                     st.success("✅ ¡Registro exitoso!")
-                    st.balloons()
                     st.rerun()
-                else:
-                    st.error("Por favor, completa todos los campos.")
-        
+
         st.divider()
-        st.subheader("Gestión de Base de Datos")
-        
         if not df.empty:
-            # Botón de Descarga Excel Legible
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
-            
-            st.download_button(
-                label="📥 DESCARGAR EXCEL DE PUNTOS",
-                data=buffer.getvalue(),
-                file_name=f"puntos_wurth_{date.today()}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-            
-            # Botón para eliminar error
-            if st.button("🗑️ ELIMINAR ÚLTIMO REGISTRO (Corrección)"):
-                # Cargamos de nuevo para asegurar que estamos borrando del archivo real
-                df_temp = pd.read_csv(DB_FILE, dtype={'ID_Cliente': str})
-                if not df_temp.empty:
-                    df_nueva = df_temp.drop(df_temp.index[-1])
-                    df_nueva.to_csv(DB_FILE, index=False)
-                    st.warning("Último registro borrado.")
-                    st.rerun()
-
-            st.write("### Vista previa de registros")
-            st.dataframe(df.sort_index(ascending=False), use_container_width=True)
-            
-    elif password != "":
-        st.error("Clave incorrecta")
-
-# --- SECCIÓN: CONSULTA CLIENTE ---
-else:
-    st.subheader("Consulta tus puntos")
-    id_busqueda = st.text_input("Ingresa tu número de cliente", placeholder="Ej: 12345678")
-    
-    if id_busqueda:
-        datos_cliente = df[df["ID_Cliente"].astype(str) == str(id_busqueda).strip()]
-        
-        if not datos_cliente.empty:
-            nombre = datos_cliente["Nombre_Cliente"].iloc[0]
-            total = int(datos_cliente["Puntos_Ganados"].sum())
-            
-            st.markdown(f"## ¡Hola, **{nombre}**!")
-            st.metric("Tu saldo actual es de:", f"{total} Puntos")
-            
-            with st.expander("Ver historial de facturas"):
-                st.table(datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False))
-            
-            st.balloons()
-        else:
-            st.warning("No se encontró el ID. Consulta con tu vendedor.")
+            st.download_button(label="📥 DESCARGAR EXCEL", data=buffer.getvalue(), file_name=f"puntos_wurth_{date.today()}.xlsx",
