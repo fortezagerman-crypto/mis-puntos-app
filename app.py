@@ -37,7 +37,7 @@ opcion = st.sidebar.radio("MENÚ PRINCIPAL", ["🔍 Consultar mis Puntos", "🏬
 
 if opcion == "🏬 Registro Staff (Interno)":
     st.subheader("Acceso Restringido")
-    CLAVE_CORRECTA = "TU_CODIGO_AQUI" # <--- CAMBIA ESTO POR TU CLAVE
+    CLAVE_CORRECTA = "089020011" # <--- CAMBIA ESTO POR TU CLAVE
     
     password = st.text_input("Introduce la clave de vendedor", type="password")
     
