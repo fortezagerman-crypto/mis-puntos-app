@@ -4,7 +4,7 @@ from datetime import date
 import os
 import io
 
-# 1. CONFIGURACIÓN DE PÁGINA Y METADATOS (Para vista previa en WhatsApp)
+# 1. CONFIGURACIÓN DE PÁGINA Y METADATOS PERSONALIZADOS
 st.set_page_config(
     page_title="Puntos Würth",
     page_icon="logo_UY.png",
@@ -12,7 +12,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Estilo visual Rojo Würth
+# Inyección de Metadatos para WhatsApp y Redes Sociales
+st.markdown(
+    """
+    <head>
+        <meta property="og:title" content="Sistema de Fidelidad Puntos Würth">
+        <meta property="og:description" content="Consulta tu saldo de puntos acumulados y descubre tus beneficios exclusivos en Würth Uruguay.">
+        <meta property="og:image" content="https://raw.githubusercontent.com/fortezagerman-crypto/mis-puntos-app/main/logo_UY.png">
+        <meta property="og:url" content="https://puntos-wurth-uy.streamlit.app/">
+        <meta name="twitter:card" content="summary_large_image">
+    </head>
+    """,
+    unsafe_allow_html=True
+)
+
+# Estilo visual corporativo
 st.markdown("""
     <style>
     .stButton>button { background-color: #E60002; color: white; border-radius: 5px; width: 100%; font-weight: bold; }
@@ -29,7 +43,6 @@ DB_FILE = "base_datos_puntos.csv"
 
 def cargar_datos():
     if os.path.exists(DB_FILE):
-        # Mantenemos ID como texto para no perder ceros iniciales
         return pd.read_csv(DB_FILE, dtype={'ID_Cliente': str})
     return pd.DataFrame(columns=["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra", "Puntos_Ganados", "Fecha"])
 
@@ -41,7 +54,6 @@ opcion = st.sidebar.radio("MENÚ", ["🔍 Consultar Puntos", "🏬 Registro Staf
 # --- SECCIÓN: REGISTRO STAFF ---
 if opcion == "🏬 Registro Staff":
     st.subheader("Panel Administrativo")
-    # Clave de acceso configurada
     password = st.text_input("Introduce la clave", type="password")
     
     if password.strip() == "089020011":
@@ -70,7 +82,6 @@ if opcion == "🏬 Registro Staff":
         st.subheader("Gestión de Base de Datos")
         
         if not df.empty:
-            # Botón de Descarga Excel Legible
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
@@ -82,7 +93,6 @@ if opcion == "🏬 Registro Staff":
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
             
-            # Botón para eliminar error
             if st.button("🗑️ ELIMINAR ÚLTIMO REGISTRO (Corrección)"):
                 df_nueva = df.drop(df.index[-1])
                 df_nueva.to_csv(DB_FILE, index=False)
