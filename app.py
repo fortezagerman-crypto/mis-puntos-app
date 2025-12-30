@@ -57,7 +57,7 @@ if opcion == "🔍 Consultar Puntos":
         else:
             st.warning("No se encontró el ID. Consulta con tu vendedor.")
 
-# --- SECCIÓN: ¿DE QUÉ SE TRATA? (Enlace al README) ---
+# --- SECCIÓN: ¿DE QUÉ SE TRATA? ---
 elif opcion == "ℹ️ ¿De qué se trata?":
     st.subheader("Información del Programa")
     st.write("""
@@ -65,9 +65,7 @@ elif opcion == "ℹ️ ¿De qué se trata?":
     haz clic en el botón debajo para leer la guía oficial.
     """)
     
-    # Enlace directo al README en tu repositorio de GitHub
     url_readme = "https://github.com/wurth-fidelidad-uy/mis-puntos-app/blob/main/README.md"
-    
     st.link_button("📖 LEER REGLAMENTO COMPLETO", url_readme)
     
     st.markdown("""
@@ -83,9 +81,7 @@ elif opcion == "🎁 Ver Beneficios":
     st.subheader("Beneficios y Premios")
     st.write("Consulta el catálogo externo para ver los premios disponibles actualmente.")
     
-    # Enlace a tu catálogo externo (puedes cambiarlo luego)
     enlace_premios = "https://www.wurth.com.uy/" 
-    
     st.link_button("🚀 VER CATÁLOGO DE PREMIOS", enlace_premios)
 
 # --- SECCIÓN: REGISTRO STAFF ---
@@ -112,8 +108,16 @@ elif opcion == "🏬 Registro Staff":
                     st.rerun()
 
         st.divider()
+        
+        # Lógica de descarga de Excel corregida
         if not df.empty:
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
-            st.download_button(label="📥 DESCARGAR EXCEL", data=buffer.getvalue(), file_name=f"puntos_wurth_{date.today()}.xlsx",
+            
+            st.download_button(
+                label="📥 DESCARGAR EXCEL",
+                data=buffer.getvalue(),
+                file_name=f"puntos_wurth_{date.today()}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
