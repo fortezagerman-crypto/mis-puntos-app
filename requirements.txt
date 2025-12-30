@@ -1,3 +1,4 @@
-st-gsheets-connection
 pandas
-SQLAlchemy
+streamlit
+xlsxwriter
+openpyxl
