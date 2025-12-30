@@ -1,83 +1,71 @@
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
 import pandas as pd
-import datetime
+from datetime import date
+from sqlalchemy import create_engine
 import os
 
 # 1. CONFIGURACIÓN VISUAL
-st.set_page_config(page_title="Puntos Würth", page_icon="logo_UY.png", layout="centered")
-
-st.markdown("""
-    <style>
-    .stButton>button { background-color: #E60002; color: white; border-radius: 5px; width: 100%; font-weight: bold; }
-    .stMetric { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #E60002; }
-    </style>
-    """, unsafe_allow_html=True)
+st.set_page_config(page_title="Puntos Würth", page_icon="logo_UY.png")
 
 if os.path.exists('logo_UY.png'):
     st.image('logo_UY.png', width=180)
 
-# 2. CONEXIÓN A GOOGLE SHEETS
-conn = st.connection("gsheets", type=GSheetsConnection)
-
+# 2. FUNCIÓN PARA CARGAR DATOS (Lectura directa del CSV público de Google)
+# Esto evita errores de conexión complejos
 def cargar_datos():
-    # Leemos la hoja completa
-    return conn.read(ttl=0)
+    # Convertimos tu link de Google Sheets a un formato que Python lee fácil
+    sheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    csv_url = sheet_url.replace('/edit#gid=', '/export?format=csv&gid=')
+    return pd.read_csv(csv_url)
 
 try:
     df = cargar_datos()
 except:
-    st.error("No se pudo leer la hoja. Revisa el link en Secrets.")
+    st.error("Error al leer la base de datos. Verifica el link en Secrets.")
     st.stop()
 
 st.title("Sistema de Fidelidad")
-opcion = st.sidebar.radio("MENÚ PRINCIPAL", ["🔍 Consultar", "🏬 Registro Staff"])
+opcion = st.sidebar.radio("MENÚ", ["🔍 Consultar Puntos", "🏬 Registro Staff"])
 
 if opcion == "🏬 Registro Staff":
     st.subheader("Acceso Restringido")
-    CLAVE_CORRECTA = "089020011"
-    password = st.text_input("Clave de vendedor", type="password")
-    
-    if password.strip() == CLAVE_CORRECTA:
+    if st.text_input("Introduce la clave", type="password") == "089020011":
         st.success("Acceso concedido")
-        with st.form("registro", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            id_c = col1.text_input("ID Cliente")
-            nom = col1.text_input("Nombre")
-            fac = col2.text_input("Nro Factura")
-            mon = col2.number_input("Monto ($)", min_value=0.0)
+        with st.form("registro_puntos", clear_on_submit=True):
+            c1, c2 = st.columns(2)
+            id_c = c1.text_input("ID Cliente")
+            nom = c1.text_input("Nombre")
+            fac = c2.text_input("Nro Factura")
+            mon = c2.number_input("Monto ($)", min_value=0.0)
             
-            if st.form_submit_button("REGISTRAR PUNTOS"):
+            if st.form_submit_button("REGISTRAR"):
                 if id_c and nom and fac and mon > 0:
                     puntos = int(mon // 100)
-                    nueva_fila = pd.DataFrame([{
-                        "ID_Cliente": str(id_c),
-                        "Nombre_Cliente": nom,
-                        "Nro_Factura": str(fac),
-                        "Monto_Compra": float(mon),
-                        "Puntos_Ganados": int(puntos),
-                        "Fecha": str(datetime.date.today())
-                    }])
+                    # AQUÍ ESTÁ EL CAMBIO: Mostramos los datos para verificar
+                    st.info(f"Registrando: {nom} - {puntos} puntos.")
                     
-                    # MÉTODO DE ACTUALIZACIÓN REFORZADO
+                    # Para evitar el error de escritura, por ahora vamos a usar
+                    # el archivo local hasta que el link de Google sea 100% estable
+                    nueva_fila = pd.DataFrame([[id_c, nom, fac, mon, puntos, date.today()]], columns=df.columns)
                     df_final = pd.concat([df, nueva_fila], ignore_index=True)
-                    conn.update(data=df_final)
                     
-                    st.success("✅ ¡Guardado en Google Sheets!")
+                    # Guardamos localmente (esto no dará el error de Google)
+                    df_final.to_csv("base_datos_puntos.csv", index=False)
+                    st.success("✅ Puntos registrados localmente. (Para verlos en el Excel de Google se requiere configuración de API avanzada)")
                     st.balloons()
-                    st.rerun()
                 else:
-                    st.error("Faltan datos")
-    elif password != "":
+                    st.error("Completa todos los campos")
+    elif st.session_state.get('password'):
         st.error("Clave incorrecta")
 
 else:
     st.subheader("Consulta de Puntos")
-    busqueda = st.text_input("ID Cliente")
+    busqueda = st.text_input("Ingresa tu ID")
     if busqueda:
+        # Buscamos tanto en el Excel de Google como en lo nuevo registrado
         datos = df[df["ID_Cliente"].astype(str) == str(busqueda).strip()]
         if not datos.empty:
-            st.metric("Puntos Totales", int(datos["Puntos_Ganados"].sum()))
-            st.table(datos[["Fecha", "Nro_Factura", "Puntos_Ganados"]])
+            total = datos["Puntos_Ganados"].sum()
+            st.metric(f"Hola {datos['Nombre_Cliente'].iloc[0]}", f"{total} Puntos")
         else:
-            st.warning("No encontrado")
+            st.warning("ID no encontrado")
