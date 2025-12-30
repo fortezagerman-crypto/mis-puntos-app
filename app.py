@@ -4,7 +4,7 @@ from datetime import date
 import os
 import io
 
-# 1. CONFIGURACIÓN DE PÁGINA Y METADATOS PERSONALIZADOS
+# 1. CONFIGURACIÓN DE PÁGINA (Esto define la pestaña del navegador)
 st.set_page_config(
     page_title="Puntos Würth",
     page_icon="logo_UY.png",
@@ -12,15 +12,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inyección de Metadatos para WhatsApp y Redes Sociales
+# METADATOS PARA WHATSAPP (Formato compatible)
 st.markdown(
-    """
+    f"""
     <head>
+        <title>Puntos Würth</title>
+        <meta name="description" content="Consulta tu saldo de puntos acumulados y beneficios exclusivos en Würth Uruguay.">
         <meta property="og:title" content="Sistema de Fidelidad Puntos Würth">
-        <meta property="og:description" content="Consulta tu saldo de puntos acumulados y descubre tus beneficios exclusivos en Würth Uruguay.">
+        <meta property="og:description" content="Consulta tu saldo de puntos acumulados y beneficios exclusivos en Würth Uruguay.">
         <meta property="og:image" content="https://raw.githubusercontent.com/fortezagerman-crypto/mis-puntos-app/main/logo_UY.png">
+        <meta property="og:type" content="website">
         <meta property="og:url" content="https://puntos-wurth-uy.streamlit.app/">
-        <meta name="twitter:card" content="summary_large_image">
     </head>
     """,
     unsafe_allow_html=True
@@ -34,11 +36,11 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Mostrar Logo
+# Mostrar Logo en la App
 if os.path.exists('logo_UY.png'):
     st.image('logo_UY.png', width=180)
 
-# 2. GESTIÓN DE BASE DE DATOS
+# --- EL RESTO DEL CÓDIGO (BASE DE DATOS Y MENÚS) ---
 DB_FILE = "base_datos_puntos.csv"
 
 def cargar_datos():
@@ -51,14 +53,12 @@ df = cargar_datos()
 st.title("Sistema de Fidelidad")
 opcion = st.sidebar.radio("MENÚ", ["🔍 Consultar Puntos", "🏬 Registro Staff"])
 
-# --- SECCIÓN: REGISTRO STAFF ---
 if opcion == "🏬 Registro Staff":
     st.subheader("Panel Administrativo")
     password = st.text_input("Introduce la clave", type="password")
     
     if password.strip() == "089020011":
         st.success("Acceso concedido")
-        
         with st.form("registro", clear_on_submit=True):
             col1, col2 = st.columns(2)
             id_c = col1.text_input("ID Cliente")
@@ -75,54 +75,32 @@ if opcion == "🏬 Registro Staff":
                     st.success("✅ ¡Registro exitoso!")
                     st.balloons()
                     st.rerun()
-                else:
-                    st.error("Por favor, completa todos los campos.")
         
         st.divider()
-        st.subheader("Gestión de Base de Datos")
-        
         if not df.empty:
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
             
-            st.download_button(
-                label="📥 DESCARGAR EXCEL DE PUNTOS",
-                data=buffer.getvalue(),
-                file_name=f"puntos_wurth_{date.today()}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            st.download_button(label="📥 DESCARGAR EXCEL", data=buffer.getvalue(), file_name=f"puntos_wurth_{date.today()}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             
-            if st.button("🗑️ ELIMINAR ÚLTIMO REGISTRO (Corrección)"):
+            if st.button("🗑️ ELIMINAR ÚLTIMO REGISTRO"):
                 df_nueva = df.drop(df.index[-1])
                 df_nueva.to_csv(DB_FILE, index=False)
-                st.warning("Último registro borrado.")
                 st.rerun()
-
-            st.write("### Vista previa de registros")
             st.dataframe(df.sort_index(ascending=False), use_container_width=True)
             
-    elif password != "":
-        st.error("Clave incorrecta")
+    elif password != "": st.error("Clave incorrecta")
 
-# --- SECCIÓN: CONSULTA CLIENTE ---
 else:
     st.subheader("Consulta tus puntos")
     id_busqueda = st.text_input("Ingresa tu número de cliente", placeholder="Ej: 12345678")
-    
     if id_busqueda:
         datos_cliente = df[df["ID_Cliente"].astype(str) == str(id_busqueda).strip()]
-        
         if not datos_cliente.empty:
-            nombre = datos_cliente["Nombre_Cliente"].iloc[0]
-            total = int(datos_cliente["Puntos_Ganados"].sum())
-            
-            st.markdown(f"## ¡Hola, **{nombre}**!")
-            st.metric("Tu saldo actual es de:", f"{total} Puntos")
-            
-            with st.expander("Ver historial de facturas"):
+            st.markdown(f"## ¡Hola, **{datos_cliente['Nombre_Cliente'].iloc[0]}**!")
+            st.metric("Tu saldo actual:", f"{int(datos_cliente['Puntos_Ganados'].sum())} Puntos")
+            with st.expander("Ver historial"):
                 st.table(datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False))
-            
             st.balloons()
-        else:
-            st.warning("No se encontró el ID. Consulta con tu vendedor.")
+        else: st.warning("No se encontró el ID.")
