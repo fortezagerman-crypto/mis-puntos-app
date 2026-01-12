@@ -15,13 +15,11 @@ st.set_page_config(
 # --- SEGURIDAD Y ESTILO VISUAL ---
 st.markdown("""
     <style>
-    /* 1. OCULTAR MENÚS DE BACKEND Y MARCAS DE AGUA */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stDeployButton {display:none;}
     
-    /* 2. ESTILO CORPORATIVO */
     .stButton>button { 
         background-color: #E60002; 
         color: white; 
@@ -38,11 +36,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Mostrar Logo
 if os.path.exists('logo_UY.png'):
     st.image('logo_UY.png', width=180)
 
-# 2. GESTIÓN DE BASE DE DATOS
 DB_FILE = "base_datos_puntos.csv"
 
 def cargar_datos():
@@ -52,18 +48,15 @@ def cargar_datos():
 
 df = cargar_datos()
 
-# --- MENÚ LATERAL ---
 st.sidebar.header("MENÚ PRINCIPAL")
 opcion = st.sidebar.radio("Seleccione una opción:", 
     ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios", "🏬 Registro Staff"])
 
-# --- SECCIÓN: CONSULTAR PUNTOS ---
 if opcion == "🔍 Consultar Puntos":
     st.subheader("Consulta tus puntos acumulados")
     id_busqueda = st.text_input("Ingresa tu número de cliente", placeholder="Ej: 12345678")
     
     if id_busqueda:
-        # Buscamos el ID exacto
         datos_cliente = df[df["ID_Cliente"].astype(str) == str(id_busqueda).strip()]
         if not datos_cliente.empty:
             nombre = datos_cliente["Nombre_Cliente"].iloc[0]
@@ -76,31 +69,20 @@ if opcion == "🔍 Consultar Puntos":
         else:
             st.warning("No se encontró el ID. Consulta con tu vendedor.")
 
-# --- SECCIÓN: ¿DE QUÉ SE TRATA? ---
 elif opcion == "ℹ️ ¿De qué se trata?":
     st.subheader("Información del Programa")
     st.write("Consulta las bases y condiciones de nuestro programa de fidelidad.")
-    
     url_readme = "https://github.com/wurth-fidelidad-uy/mis-puntos-app/blob/main/README.md"
     st.link_button("📖 LEER REGLAMENTO COMPLETO", url_readme)
-    
-    st.markdown("""
-    ---
-    **Resumen rápido:**
-    * Acumulas **1 punto por cada $100**.
-    * Los puntos se canjean por premios exclusivos.
-    """)
+    st.markdown("---\n**Resumen rápido:**\n* Acumulas **1 punto por cada $100**.\n* Los puntos se canjean por premios exclusivos.")
 
-# --- SECCIÓN: VER BENEFICIOS ---
 elif opcion == "🎁 Ver Beneficios":
     st.subheader("Beneficios y Premios")
     enlace_premios = "https://www.wurth.com.uy/" 
     st.link_button("🚀 VER CATÁLOGO DE PREMIOS", enlace_premios)
 
-# --- SECCIÓN: REGISTRO STAFF ---
 elif opcion == "🏬 Registro Staff":
     st.subheader("Panel Administrativo")
-    # Esta es tu barrera principal contra malintencionados
     password = st.text_input("Introduce la clave de seguridad", type="password")
     
     if password.strip() == "089020011":
@@ -123,13 +105,13 @@ elif opcion == "🏬 Registro Staff":
 
         st.divider()
         
-        # Solo el staff con contraseña puede descargar la base completa
         if not df.empty:
             buffer = io.BytesIO()
+            # Usamos ExcelWriter para generar el archivo en memoria
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
             
-            # --- AQUÍ ESTABA EL ERROR CORREGIDO ---
+            # El botón de descarga ahora está completo y cerrado correctamente
             st.download_button(
                 label="📥 DESCARGAR BASE DE DATOS (EXCEL)",
                 data=buffer.getvalue(),
