@@ -129,5 +129,10 @@ elif opcion == "🏬 Registro Staff":
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
             
+            # --- AQUÍ ESTABA EL ERROR CORREGIDO ---
             st.download_button(
                 label="📥 DESCARGAR BASE DE DATOS (EXCEL)",
+                data=buffer.getvalue(),
+                file_name="base_puntos_wurth.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
