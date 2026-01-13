@@ -44,7 +44,7 @@ DB_FILE = "base_datos_puntos.csv"
 
 def cargar_datos():
     if os.path.exists(DB_FILE):
-        return pd.read_csv(DB_FILE, dtype={'ID_Cliente': str})
+        return pd.read_csv(DB_FILE, dtype={'ID_Cliente': str, 'Nro_Factura': str})
     return pd.DataFrame(columns=["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra", "Puntos_Ganados", "Fecha"])
 
 df = cargar_datos()
@@ -105,13 +105,16 @@ elif opcion == "🏬 Registro Staff":
             
             if st.form_submit_button("REGISTRAR PUNTOS"):
                 if id_c and nom and fac and mon > 0:
-                    puntos = int(mon // 100)
-                    nueva_fila = pd.DataFrame([[str(id_c), nom, fac, mon, puntos, date.today()]], columns=df.columns)
-                    df_final = pd.concat([df, nueva_fila], ignore_index=True)
-                    df_final.to_csv(DB_FILE, index=False)
-                    st.success("✅ ¡Puntos registrados correctamente!")
-                    time.sleep(1)
-                    st.rerun()
+                    if str(fac) in df['Nro_Factura'].astype(str).values:
+                        st.error(f"La factura {fac} ya fue registrada anteriormente.")
+                    else:
+                        puntos = int(mon // 100)
+                        nueva_fila = pd.DataFrame([[str(id_c), nom, str(fac), mon, puntos, date.today()]], columns=df.columns)
+                        df_final = pd.concat([df, nueva_fila], ignore_index=True)
+                        df_final.to_csv(DB_FILE, index=False)
+                        st.success("✅ ¡Puntos registrados correctamente!")
+                        time.sleep(1)
+                        st.rerun()
 
         st.divider()
 
@@ -119,7 +122,7 @@ elif opcion == "🏬 Registro Staff":
         st.markdown("### 2. Carga Masiva desde Excel")
         st.info("Sube un archivo **.xlsx** con las columnas: ID_Cliente, Nombre_Cliente, Nro_Factura, Monto_Compra")
         
-        archivo_excel = st.file_uploader("Arrastra aquí tu reporte de BI", type=['xlsx'])
+        archivo_excel = st.file_uploader("Arrastra aquí tu reporte de BI", type=['xlsx'], key="uploader_masivo")
         
         if archivo_excel is not None:
             try:
@@ -127,28 +130,39 @@ elif opcion == "🏬 Registro Staff":
                 columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
                 
                 if all(col in df_nuevo.columns for col in columnas_req):
+                    # Formatear datos nuevos
                     df_nuevo['ID_Cliente'] = df_nuevo['ID_Cliente'].astype(str)
+                    df_nuevo['Nro_Factura'] = df_nuevo['Nro_Factura'].astype(str)
                     df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra'] // 100).astype(int)
                     df_nuevo['Fecha'] = date.today()
                     
-                    st.write("Vista previa de los datos a cargar:")
-                    st.dataframe(df_nuevo.head())
-                    
-                    if st.button("CONFIRMAR IMPORTACIÓN", help="Haz clic una sola vez"):
-                        with st.spinner('Procesando y guardando datos...'):
-                            # Concatenar con la base actual
-                            df_final = pd.concat([df, df_nuevo[df.columns]], ignore_index=True)
-                            df_final.to_csv(DB_FILE, index=False)
-                            
-                            # Confirmación Visual
-                            st.success(f"✅ ¡EXCEL CARGADO CORRECTAMENTE! Se registraron {len(df_nuevo)} registros.")
-                            st.balloons()
-                            
-                            # Esperar 3 segundos para que el usuario vea el éxito y resetear
-                            time.sleep(3)
-                            st.rerun()
+                    # FILTRO ANTI-DUPLICADOS
+                    facturas_existentes = df['Nro_Factura'].astype(str).values
+                    df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_existentes)]
+                    duplicados_count = len(df_nuevo) - len(df_filtrado)
+
+                    if len(df_filtrado) == 0:
+                        st.warning(f"Todas las facturas en este archivo ({duplicados_count}) ya existen en la base de datos.")
+                    else:
+                        st.write(f"Vista previa: Se cargarán {len(df_filtrado)} facturas nuevas (se omitirán {duplicados_count} duplicadas).")
+                        st.dataframe(df_filtrado.head())
+                        
+                        if st.button("CONFIRMAR IMPORTACIÓN", help="Haz clic una sola vez"):
+                            with st.spinner('Procesando y guardando datos...'):
+                                df_final = pd.concat([df, df_filtrado[df.columns]], ignore_index=True)
+                                df_final.to_csv(DB_FILE, index=False)
+                                
+                                st.success(f"✅ ¡PROCESO COMPLETADO!")
+                                st.write(f"Nuevos registros: {len(df_filtrado)}")
+                                if duplicados_count > 0:
+                                    st.write(f"Registros omitidos por estar duplicados: {duplicados_count}")
+                                
+                                st.balloons()
+                                time.sleep(3)
+                                # Al hacer rerun, el uploader con key="uploader_masivo" se resetea
+                                st.rerun()
                 else:
-                    st.error(f"Faltan columnas requeridas en el Excel: {columnas_req}")
+                    st.error(f"Faltan columnas requeridas: {columnas_req}")
             except Exception as e:
                 st.error(f"Error al procesar el archivo: {e}")
 
