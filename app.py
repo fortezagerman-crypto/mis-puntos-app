@@ -70,7 +70,7 @@ elif opcion == "🏬 Registro Staff":
         st.success("Acceso concedido")
         
         # --- BLOQUE 1: CARGA MANUAL ---
-        with st.expander("➕ Carga Manual (Individual)"):
+        with st.expander("➕ Carga Manual (Individual)", expanded=False):
             with st.form("registro", clear_on_submit=True):
                 col1, col2 = st.columns(2)
                 id_c = col1.text_input("ID Cliente").strip()
@@ -91,3 +91,69 @@ elif opcion == "🏬 Registro Staff":
                             st.rerun()
 
         # --- BLOQUE 2: CARGA MASIVA ---
+        with st.expander("📊 Carga Masiva (Archivo Excel)", expanded=True):
+            st.info("Asegúrate de que el Excel tenga las columnas: ID_Cliente, Nombre_Cliente, Nro_Factura, Monto_Compra")
+            archivo_excel = st.file_uploader("Sube el reporte de BI (.xlsx)", type=['xlsx'], key="uploader_bi")
+            
+            if archivo_excel:
+                try:
+                    df_nuevo = pd.read_excel(archivo_excel, dtype=str)
+                    columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
+                    if all(col in df_nuevo.columns for col in columnas_req):
+                        # Limpiar duplicados del archivo entrante
+                        df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
+                        df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
+                        df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
+                        df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
+                        df_nuevo['Fecha'] = str(date.today())
+                        
+                        # Filtrar contra lo que ya hay en la base de datos
+                        facturas_en_base = df['Nro_Factura'].values
+                        df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_en_base)]
+                        
+                        if not df_filtrado.empty:
+                            st.write(f"Se detectaron {len(df_filtrado)} registros nuevos.")
+                            st.dataframe(df_filtrado[COLUMNAS_ESTANDAR].head())
+                            if st.button("CONFIRMAR CARGA MASIVA"):
+                                with st.spinner('Procesando datos...'):
+                                    df_final = pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True)
+                                    df_final.to_csv(DB_FILE, index=False)
+                                    st.success("✅ ¡Carga masiva finalizada con éxito!")
+                                    st.balloons()
+                                    time.sleep(2)
+                                    st.rerun()
+                        else:
+                            st.warning("Todas las facturas de este archivo ya están registradas.")
+                    else:
+                        st.error(f"El Excel no tiene el formato correcto. Columnas requeridas: {columnas_req}")
+                except Exception as e:
+                    st.error(f"Error al leer el archivo: {e}")
+
+        # --- BLOQUE 3: GESTIÓN DE BASE ---
+        with st.expander("🗑️ Gestión de Registros (Ver y Borrar)"):
+            if not df.empty:
+                st.write("Lista de registros actuales:")
+                st.dataframe(df)
+                idx_borrar = st.number_input("Escribe el número de índice (columna izquierda) para borrar", min_value=0, max_value=len(df)-1, step=1)
+                if st.button("ELIMINAR REGISTRO SELECCIONADO"):
+                    df_nuevo_base = df.drop(df.index[idx_borrar])
+                    df_nuevo_base.to_csv(DB_FILE, index=False)
+                    st.warning(f"Registro {idx_borrar} eliminado.")
+                    time.sleep(1)
+                    st.rerun()
+            else:
+                st.info("La base de datos está actualmente vacía.")
+
+        st.divider()
+        
+        # BOTÓN DE DESCARGA (Siempre visible)
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
+        
+        st.download_button(
+            label="📥 DESCARGAR BASE COMPLETA (EXCEL)",
+            data=buffer.getvalue(),
+            file_name=f"base_puntos_{date.today()}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
