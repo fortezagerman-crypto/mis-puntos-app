@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import date
 import os
 import io
+import time
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
@@ -109,6 +110,7 @@ elif opcion == "🏬 Registro Staff":
                     df_final = pd.concat([df, nueva_fila], ignore_index=True)
                     df_final.to_csv(DB_FILE, index=False)
                     st.success("✅ ¡Puntos registrados correctamente!")
+                    time.sleep(1)
                     st.rerun()
 
         st.divider()
@@ -129,18 +131,26 @@ elif opcion == "🏬 Registro Staff":
                     df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra'] // 100).astype(int)
                     df_nuevo['Fecha'] = date.today()
                     
-                    st.write("Vista previa de la carga:")
+                    st.write("Vista previa de los datos a cargar:")
                     st.dataframe(df_nuevo.head())
                     
-                    if st.button("CONFIRMAR IMPORTACIÓN"):
-                        df_final = pd.concat([df, df_nuevo[df.columns]], ignore_index=True)
-                        df_final.to_csv(DB_FILE, index=False)
-                        st.success(f"✅ Se han cargado {len(df_nuevo)} registros.")
-                        st.rerun()
+                    if st.button("CONFIRMAR IMPORTACIÓN", help="Haz clic una sola vez"):
+                        with st.spinner('Procesando y guardando datos...'):
+                            # Concatenar con la base actual
+                            df_final = pd.concat([df, df_nuevo[df.columns]], ignore_index=True)
+                            df_final.to_csv(DB_FILE, index=False)
+                            
+                            # Confirmación Visual
+                            st.success(f"✅ ¡EXCEL CARGADO CORRECTAMENTE! Se registraron {len(df_nuevo)} registros.")
+                            st.balloons()
+                            
+                            # Esperar 3 segundos para que el usuario vea el éxito y resetear
+                            time.sleep(3)
+                            st.rerun()
                 else:
-                    st.error(f"Faltan columnas: {columnas_req}")
+                    st.error(f"Faltan columnas requeridas en el Excel: {columnas_req}")
             except Exception as e:
-                st.error(f"Error al leer el archivo: {e}")
+                st.error(f"Error al procesar el archivo: {e}")
 
         st.divider()
         
@@ -150,8 +160,8 @@ elif opcion == "🏬 Registro Staff":
                 df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
             
             st.download_button(
-                label="📥 DESCARGAR BASE DE DATOS (EXCEL)",
+                label="📥 DESCARGAR BASE DE DATOS ACTUAL (EXCEL)",
                 data=buffer.getvalue(),
-                file_name="base_puntos_wurth.xlsx",
+                file_name=f"base_puntos_wurth_{date.today()}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
