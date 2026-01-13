@@ -51,7 +51,8 @@ if opcion == "🔍 Consultar Puntos":
         datos_cliente = df[df["ID_Cliente"] == id_busqueda]
         if not datos_cliente.empty:
             nombre = datos_cliente["Nombre_Cliente"].iloc[0]
-            total = int(pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0).sum())
+            puntos_num = pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0)
+            total = int(puntos_num.sum())
             st.markdown(f"## ¡Hola, **{nombre}**!")
             st.metric("Tu saldo actual es de:", f"{total} Puntos")
             with st.expander("Ver historial de facturas"):
@@ -91,8 +92,24 @@ elif opcion == "🏬 Registro Staff":
 
         # --- BLOQUE 2: CARGA MASIVA ---
         with st.expander("📊 Carga Masiva (Excel)"):
-            archivo_excel = st.file_uploader("Sube el Excel de BI", type=['xlsx'], key="uploader_staff")
+            archivo_excel = st.file_uploader("Sube el Excel de BI", type=['xlsx'], key="uploader_bi")
             if archivo_excel:
                 try:
                     df_nuevo = pd.read_excel(archivo_excel, dtype=str)
-                    columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_
+                    columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
+                    if all(col in df_nuevo.columns for col in columnas_req):
+                        # Limpieza
+                        df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
+                        df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
+                        df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
+                        df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
+                        df_nuevo['Fecha'] = str(date.today())
+                        
+                        facturas_en_base = df['Nro_Factura'].values
+                        df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_en_base)]
+                        
+                        if not df_filtrado.empty:
+                            st.write(f"Se detectaron {len(df_filtrado)} registros nuevos.")
+                            st.dataframe(df_filtrado[COLUMNAS_ESTANDAR].head())
+                            if st.button("CONFIRMAR CARGA MASIVA"):
+                                df_final = pd.concat([df, df_filtrado
