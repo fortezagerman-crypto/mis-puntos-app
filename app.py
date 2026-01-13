@@ -31,13 +31,27 @@ if os.path.exists('logo_UY.png'):
 DB_FILE = "base_datos_puntos.csv"
 COLUMNAS_ESTANDAR = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra", "Puntos_Ganados", "Fecha"]
 
-def cargar_datos():
-    if os.path.exists(DB_FILE):
-        # Cargamos todo como string para evitar que el Nro_Factura pierda letras o ceros
-        return pd.read_csv(DB_FILE, dtype=str)
-    return pd.DataFrame(columns=COLUMNAS_ESTANDAR)
+# --- FUNCIÓN DE CARGA Y REPARACIÓN ---
+def cargar_y_reparar_datos():
+    if not os.path.exists(DB_FILE):
+        return pd.DataFrame(columns=COLUMNAS_ESTANDAR)
+    
+    try:
+        # Intentamos leer la base actual
+        temp_df = pd.read_csv(DB_FILE, dtype=str)
+        
+        # Si las columnas no coinciden o hay datos movidos, re-estructuramos
+        if list(temp_df.columns) != COLUMNAS_ESTANDAR:
+            # Solo nos quedamos con las filas que tengan datos válidos
+            temp_df = temp_df.reindex(columns=COLUMNAS_ESTANDAR)
+            # Guardamos la versión "limpia" para arreglar el archivo
+            temp_df.to_csv(DB_FILE, index=False)
+            
+        return temp_df
+    except:
+        return pd.DataFrame(columns=COLUMNAS_ESTANDAR)
 
-df = cargar_datos()
+df = cargar_y_reparar_datos()
 
 # --- MENÚ LATERAL ---
 st.sidebar.header("MENÚ PRINCIPAL")
@@ -52,8 +66,10 @@ if opcion == "🔍 Consultar Puntos":
         datos_cliente = df[df["ID_Cliente"] == id_busqueda]
         if not datos_cliente.empty:
             nombre = datos_cliente["Nombre_Cliente"].iloc[0]
-            # Convertimos a numérico solo para sumar
-            total = int(pd.to_numeric(datos_cliente["Puntos_Ganados"]).sum())
+            # Convertimos a numérico para sumar de forma segura
+            puntos_numericos = pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0)
+            total = int(puntos_numericos.sum())
+            
             st.markdown(f"## ¡Hola, **{nombre}**!")
             st.metric("Tu saldo actual es de:", f"{total} Puntos")
             with st.expander("Ver historial de facturas"):
@@ -82,7 +98,7 @@ elif opcion == "🏬 Registro Staff":
             if st.form_submit_button("REGISTRAR PUNTOS"):
                 if id_c and nom and fac and mon > 0:
                     if fac in df['Nro_Factura'].values:
-                        st.error(f"Error: La factura {fac} ya existe en la base.")
+                        st.error(f"Error: La factura {fac} ya existe.")
                     else:
                         puntos = str(int(mon // 100))
                         nueva_fila = pd.DataFrame([[id_c, nom, fac, str(mon), puntos, str(date.today())]], columns=COLUMNAS_ESTANDAR)
@@ -100,47 +116,41 @@ elif opcion == "🏬 Registro Staff":
         
         if archivo_excel is not None:
             try:
-                # Leemos forzando que todo sea texto para evitar errores de formato
                 df_nuevo = pd.read_excel(archivo_excel, dtype=str)
                 columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
                 
                 if all(col in df_nuevo.columns for col in columnas_req):
-                    # 1. Limpieza inicial: quitar espacios en blanco
+                    # Limpieza y formateo
                     for col in columnas_req:
                         df_nuevo[col] = df_nuevo[col].str.strip()
-
-                    # 2. Eliminar duplicados dentro del mismo Excel subido
+                    
                     df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
-
-                    # 3. Calcular puntos y fecha
-                    df_nuevo['Monto_Compra'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
-                    df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra'] // 100).astype(int).astype(str)
-                    df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra'].astype(str)
+                    df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
+                    df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
+                    df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
                     df_nuevo['Fecha'] = str(date.today())
                     
-                    # 4. Filtro contra la base de datos
-                    facturas_ya_en_base = df['Nro_Factura'].values
-                    df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_ya_en_base)]
-                    duplicados = len(df_nuevo) - len(df_filtrado)
-
+                    # Filtro contra base existente
+                    facturas_en_base = df['Nro_Factura'].values
+                    df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_en_base)]
+                    
                     if df_filtrado.empty:
-                        st.warning("Todas las facturas de este archivo ya están registradas.")
+                        st.warning("No hay facturas nuevas para cargar.")
                     else:
-                        st.write(f"Se detectaron {len(df_filtrado)} facturas nuevas.")
+                        st.write(f"Se cargarán {len(df_filtrado)} facturas nuevas.")
                         st.dataframe(df_filtrado[COLUMNAS_ESTANDAR].head())
                         
                         if st.button("CONFIRMAR IMPORTACIÓN"):
-                            # Forzamos el orden de las columnas antes de unir
                             df_final = pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True)
                             df_final.to_csv(DB_FILE, index=False)
-                            st.success(f"✅ ¡Carga exitosa! Se omitieron {duplicados} facturas ya existentes.")
+                            st.success("✅ ¡Carga masiva completada!")
                             st.balloons()
                             time.sleep(3)
                             st.rerun()
                 else:
                     st.error(f"El Excel debe tener: {columnas_req}")
             except Exception as e:
-                st.error(f"Error procesando el archivo: {e}")
+                st.error(f"Error: {e}")
 
         st.divider()
         if not df.empty:
