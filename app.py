@@ -29,7 +29,7 @@ fondos = {
     "Staff": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
 }
 
-# --- 4. LOGO Y DATOS ---
+# --- 4. CARGA DE LOGO Y DATOS ---
 if os.path.exists('logo_UY.png'):
     st.image('logo_UY.png', width=180)
 
@@ -50,7 +50,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
 opcion_staff = st.sidebar.checkbox("Acceder como Staff")
 
-# --- APLICAR FONDO CON BLEND MODE ---
+# --- APLICAR FONDO DINÁMICO ---
 opcion_actual = "Staff" if opcion_staff else opcion_cliente
 url_f = fondos.get(opcion_actual, fondos["🔍 Consultar Puntos"])
 
@@ -58,7 +58,7 @@ st.markdown(f"""
     <style>
     .stApp {{
         background-image: url("{url_f}") !important;
-        background-color: rgba(255, 255, 255, 0.75) !important;
+        background-color: rgba(255, 255, 255, 0.7) !important;
         background-blend-mode: overlay !important;
     }}
     </style>
@@ -78,21 +78,20 @@ if not opcion_staff:
                 st.metric("Tu saldo actual es de:", f"{total} Puntos")
                 with st.expander("Ver historial de facturas"):
                     st.table(datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False))
-                st.balloons()
             else:
                 st.warning("No se encontró el ID.")
 
     elif opcion_cliente == "ℹ️ ¿De qué se trata?":
         st.subheader("Información del Programa")
         st.write("Bienvenido al sistema de beneficios de Würth Uruguay.")
-        # BOTÓN A PDF EXTERNO DE DISCLAIMER
-        URL_DISCLAIMER = "https://www.tu-web.com.uy/disclaimer-puntos.pdf"
-        st.link_button("📖 LEER REGLAMENTO Y CONDICIONES", URL_DISCLAIMER)
+        # BOTÓN A REGLAMENTO EXTERNO
+        URL_REGLAMENTO = "https://www.wurth.com.uy/reglamento_puntos.pdf" 
+        st.link_button("📖 LEER REGLAMENTO Y CONDICIONES", URL_REGLAMENTO)
 
     elif opcion_cliente == "🎁 Ver Beneficios":
         st.subheader("Beneficios y Premios")
-        # BOTÓN A PDF EXTERNO DE CATÁLOGO
-        URL_CATALOGO = "https://www.tu-web.com.uy/catalogo-premios.pdf" 
+        # BOTÓN A CATÁLOGO EXTERNO
+        URL_CATALOGO = "https://www.wurth.com.uy/catalogo_premios.pdf" 
         st.link_button("🚀 ABRIR CATÁLOGO DE PREMIOS (PDF)", URL_CATALOGO)
 
 # --- 7. LÓGICA STAFF ---
@@ -108,15 +107,14 @@ else:
             if archivo:
                 try:
                     df_n = pd.read_excel(archivo, dtype=str)
-                    columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
-                    if all(col in df_n.columns for col in columnas_req):
+                    if all(col in df_n.columns for col in ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]):
                         df_n = df_n.drop_duplicates(subset=['Nro_Factura'])
                         df_n['Puntos_Ganados'] = (pd.to_numeric(df_n['Monto_Compra'], errors='coerce').fillna(0) // 100).astype(int).astype(str)
                         df_n['Fecha'] = str(date.today())
                         df_f = df_n[~df_n['Nro_Factura'].isin(df['Nro_Factura'].values)]
                         if not df_f.empty:
                             st.dataframe(df_f[COLUMNAS_ESTANDAR].head())
-                            if st.button("CONFIRMAR CARGA"):
+                            if st.button("CONFIRMAR"):
                                 pd.concat([df, df_f[COLUMNAS_ESTANDAR]], ignore_index=True).to_csv(DB_FILE, index=False)
                                 st.success("Carga exitosa.")
                                 time.sleep(1)
@@ -130,20 +128,18 @@ else:
                 id_i = c1.text_input("ID Cliente")
                 nom_i = c1.text_input("Nombre")
                 fac_i = c2.text_input("Factura")
-                mon_i = c2.number_input("Monto ($)", min_value=0.0)
+                mon_i = c2.number_input("Monto", min_value=0.0)
                 if st.form_submit_button("REGISTRAR"):
                     p = str(int(mon_i // 100))
                     nueva = pd.DataFrame([[id_i, nom_i, fac_i, str(mon_i), p, str(date.today())]], columns=COLUMNAS_ESTANDAR)
                     pd.concat([df, nueva], ignore_index=True).to_csv(DB_FILE, index=False)
-                    st.success("Guardado.")
-                    time.sleep(1)
                     st.rerun()
 
         with t3:
             if not df.empty:
                 st.dataframe(df)
                 idx = st.number_input("Índice a borrar", min_value=0, max_value=len(df)-1, step=1)
-                if st.button("ELIMINAR REGISTRO"):
+                if st.button("ELIMINAR"):
                     df.drop(df.index[idx]).to_csv(DB_FILE, index=False)
                     st.rerun()
 
@@ -151,4 +147,4 @@ else:
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False)
-        st.download_button("📥 DESCARGAR BASE COMPLETA", buffer.getvalue(), "base_puntos.xlsx")
+        st.download_button("📥 DESCARGAR BASE", buffer.getvalue(), "base_puntos.xlsx")
