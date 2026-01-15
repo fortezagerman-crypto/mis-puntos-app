@@ -9,21 +9,17 @@ def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# Cargar el archivo de estilos
-if os.path.exists("style.css"):
-    local_css("style.css")
-
-# Lógica de fondos dinámicos por opción
+# URLs de ejemplo (Fotos de Würth)
 fondos = {
-    "🔍 Consultar Puntos": "https://url_de_tu_imagen_1.jpg",
-    "ℹ️ ¿De qué se trata?": "https://url_de_tu_imagen_2.jpg",
-    "🎁 Ver Beneficios": "https://url_de_tu_imagen_3.jpg",
-    "Staff": "https://url_de_tu_imagen_4.jpg"
+    "🔍 Consultar Puntos": "https://images.unsplash.com/photo-1530124560677-bbfda2f97a1d?q=80&w=2070",
+    "ℹ️ ¿De qué se trata?": "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070",
+    "🎁 Ver Beneficios": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=2070",
+    "Staff": "https://images.unsplash.com/photo-1513828583688-c52646db42da?q=80&w=2070"
 }
 
-# Aplicar el fondo según la opción elegida en tu radio button o checkbox
-url_actual = fondos.get("Staff" if acceso_staff else opcion_cliente)
-st.markdown(f'<style>.stApp {{ background-image: url("{url_actual}"); }}</style>', unsafe_allow_html=True)
+# Determinar cuál fondo mostrar
+img = fondos.get("Staff" if acceso_staff else opcion_cliente)
+st.markdown(f'<style>.stApp {{ background-image: url("{img}"); }}</style>', unsafe_allow_html=True)
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
