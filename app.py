@@ -9,17 +9,21 @@ def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-# URLs de ejemplo (Fotos de Würth)
+# --- LÓGICA DE FONDOS ---
+# Sugerencia: Busca imágenes en Unsplash o usa fotos reales de Würth subidas a la web
 fondos = {
-    "🔍 Consultar Puntos": "https://images.unsplash.com/photo-1530124560677-bbfda2f97a1d?q=80&w=2070",
-    "ℹ️ ¿De qué se trata?": "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070",
-    "🎁 Ver Beneficios": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=2070",
-    "Staff": "https://images.unsplash.com/photo-1513828583688-c52646db42da?q=80&w=2070"
+    "🔍 Mi Saldo de Puntos": "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=2070",
+    "ℹ️ Información": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070",
+    "🎁 Catálogo": "https://images.unsplash.com/photo-1530124560677-bbfda2f97a1d?q=80&w=2070",
+    "Staff": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
 }
 
-# Determinar cuál fondo mostrar
-img = fondos.get("Staff" if acceso_staff else opcion_cliente)
-st.markdown(f'<style>.stApp {{ background-image: url("{img}"); }}</style>', unsafe_allow_html=True)
+# Definir qué imagen cargar
+opcion_actual = "Staff" if acceso_staff else opcion
+url_fondo = fondos.get(opcion_actual, fondos["🔍 Mi Saldo de Puntos"])
+
+# Aplicar el fondo vía CSS inyectado
+st.markdown(f'<style>.stApp {{ background-image: url("{url_fondo}"); }}</style>', unsafe_allow_html=True)
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
