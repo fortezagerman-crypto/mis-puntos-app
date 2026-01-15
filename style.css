@@ -1,9 +1,9 @@
-/* 1. SEGURIDAD: OCULTAR MENÚS INTERNOS */
+/* 1. SEGURIDAD: OCULTAR SOLO LO QUE NO SIRVE */
 #MainMenu, footer, .stDeployButton {
     visibility: hidden !important;
 }
 
-/* 2. CONFIGURACIÓN DEL FONDO DINÁMICO */
+/* 2. FONDO DINÁMICO CON VELO DE CLARIDAD (60%) */
 .stApp {
     background-size: cover !important;
     background-position: center !important;
@@ -11,8 +11,7 @@
     transition: background-image 0.8s ease-in-out;
 }
 
-/* 3. CAPA DE OPACIDAD GLOBAL (VELO BLANCO AL 60%) */
-/* Esto genera la claridad necesaria para leer el texto sin cajas */
+/* Este bloque es el que le da la neblina blanca a la imagen para poder leer */
 .stApp::before {
     content: "";
     position: absolute;
@@ -20,11 +19,11 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.6); /* 0.6 es el 60% de opacidad blanca */
+    background-color: rgba(255, 255, 255, 0.6) !important;
     z-index: -1;
 }
 
-/* 4. ELIMINAR TODOS LOS RECUADROS Y SOMBRAS */
+/* 3. LIMPIEZA TOTAL: QUITAR CUADRANTES Y BORDES */
 [data-testid="stVerticalBlock"] > div > div, 
 .stMetric, 
 .stTable, 
@@ -36,7 +35,7 @@
     box-shadow: none !important;
 }
 
-/* 5. BOTÓN DE MENÚ LATERAL SIEMPRE VISIBLE */
+/* 4. BOTÓN DE MENÚ LATERAL (ROJO WÜRTH) */
 header[data-testid="stHeader"] {
     background: transparent !important;
 }
