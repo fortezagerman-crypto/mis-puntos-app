@@ -1,9 +1,42 @@
-/* 1. SEGURIDAD: OCULTAR SOLO ELEMENTOS INTERNOS, PERO NO EL BOTÓN DE MENÚ */
+/* 1. SEGURIDAD: OCULTAR MENÚS INTERNOS */
 #MainMenu, footer, .stDeployButton {
     visibility: hidden !important;
 }
 
-/* 2. RECUPERAR Y ESTILIZAR EL BOTÓN DEL MENÚ LATERAL (EL REGRESAR) */
+/* 2. CONFIGURACIÓN DEL FONDO DINÁMICO */
+.stApp {
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    transition: background-image 0.8s ease-in-out;
+}
+
+/* 3. CAPA DE TRANSPARENCIA GLOBAL SOBRE EL FONDO */
+/* Esto oscurece o aclara la imagen un poco para que el texto resalte, sin usar cajas */
+.stApp::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.6); /* Transparencia blanca al 60% */
+    z-index: -1;
+}
+
+/* 4. ELIMINAR TODOS LOS RECUADROS Y BORDES */
+[data-testid="stVerticalBlock"] > div > div, 
+.stMetric, 
+.stTable, 
+.stTabs,
+[data-testid="stExpander"],
+.stForm {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* 5. RECUPERAR BOTÓN DE MENÚ LATERAL */
 header[data-testid="stHeader"] {
     background: transparent !important;
 }
@@ -12,44 +45,5 @@ button[data-testid="stBaseButton-headerNoPadding"] {
     background-color: #E60002 !important;
     color: white !important;
     border-radius: 50% !important;
-    padding: 5px !important;
     visibility: visible !important;
-}
-
-/* 3. DISEÑO DEL FONDO DINÁMICO */
-.stApp {
-    background-size: cover !important;
-    background-position: center !important;
-    background-attachment: fixed !important;
-    transition: background-image 0.8s ease-in-out;
-}
-
-/* 4. CAPA DE LEGIBILIDAD (VIDRIO ESMERILADO) */
-[data-testid="stVerticalBlock"] > div > div, 
-.stMetric, 
-.stTable, 
-.stTabs,
-[data-testid="stExpander"] {
-    background-color: rgba(255, 255, 255, 0.85) !important;
-    padding: 25px !important;
-    border-radius: 15px !important;
-    backdrop-filter: blur(10px) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
-    margin-bottom: 15px !important;
-}
-
-/* 5. TIPOGRAFÍA DEL MENÚ LATERAL */
-[data-testid="stSidebarNav"] span {
-    font-size: 19px !important;
-    font-weight: 600 !important;
-    color: #333333 !important;
-}
-
-/* 6. ESTILO GENERAL DE BOTONES ROJOS */
-.stButton>button {
-    background-color: #E60002 !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-weight: bold !important;
 }
