@@ -10,7 +10,7 @@ st.set_page_config(
     page_title="Puntos Würth",
     page_icon="logo_UY.png",
     layout="centered",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="expanded"
 )
 
 # --- 2. CONEXIÓN CON EL ARCHIVO CSS EXTERNO ---
@@ -45,24 +45,20 @@ df = cargar_datos()
 
 # --- 5. MENÚ LATERAL ---
 st.sidebar.markdown("# 🏆 CLIENTES")
-opcion_cliente = st.sidebar.radio("Menú de Usuario:", 
-    ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios"])
-
+opcion_cliente = st.sidebar.radio("Menú de Usuario:", ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios"])
 st.sidebar.markdown("---") 
-
 st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
 opcion_staff = st.sidebar.checkbox("Acceder como Staff")
 
 # Aplicar fondo dinámico
-url_actual = fondos["Staff"] if opcion_staff else fondos.get(opcion_cliente)
-st.markdown(f'<style>.stApp {{ background-image: url("{url_actual}"); }}</style>', unsafe_allow_html=True)
+url_fondo = fondos["Staff"] if opcion_staff else fondos.get(opcion_cliente)
+st.markdown(f'<style>.stApp {{ background-image: url("{url_fondo}"); }}</style>', unsafe_allow_html=True)
 
 # --- 6. LÓGICA DE NAVEGACIÓN CLIENTE ---
 if not opcion_staff:
     if opcion_cliente == "🔍 Consultar Puntos":
         st.subheader("Consulta tus puntos acumulados")
         id_busqueda = st.text_input("Ingresa tu número de cliente").strip()
-        
         if id_busqueda:
             datos_cliente = df[df["ID_Cliente"] == id_busqueda]
             if not datos_cliente.empty:
@@ -84,7 +80,6 @@ if not opcion_staff:
 
     elif opcion_cliente == "🎁 Ver Beneficios":
         st.subheader("Beneficios y Premios")
-        st.write("Haz clic para abrir el catálogo en una nueva ventana.")
         URL_PDF_CATALOGO = "https://www.wurth.com.uy/catalogo_premios.pdf" 
         st.link_button("🚀 ABRIR CATÁLOGO (PDF)", URL_PDF_CATALOGO)
 
@@ -92,39 +87,38 @@ if not opcion_staff:
 else:
     st.subheader("🔐 Panel Administrativo - Staff")
     password = st.text_input("Clave de Seguridad", type="password")
-    
     if password.strip() == "089020011":
         st.success("Acceso concedido")
         tab1, tab2, tab3 = st.tabs(["📊 Carga Masiva", "➕ Carga Manual", "🗑️ Gestión"])
         
         with tab1:
-            archivo_excel = st.file_uploader("Subir .xlsx", type=['xlsx'], key="bi_u")
+            archivo_excel = st.file_uploader("Subir .xlsx", type=['xlsx'], key="bi_uploader")
             if archivo_excel:
                 try:
                     df_nuevo = pd.read_excel(archivo_excel, dtype=str)
-                    if all(col in df_nuevo.columns for col in ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]):
+                    columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
+                    if all(col in df_nuevo.columns for col in columnas_req):
                         df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
                         df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
                         df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
                         df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
                         df_nuevo['Fecha'] = str(date.today())
-                        
                         df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(df['Nro_Factura'].values)]
-                        
                         if not df_filtrado.empty:
                             st.dataframe(df_filtrado[COLUMNAS_ESTANDAR].head())
                             if st.button("CONFIRMAR CARGA"):
-                                pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True).to_csv(DB_FILE, index=False)
-                                st.success("Cargado correctamente.")
-                                time.sleep(2)
+                                df_final = pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True)
+                                df_final.to_csv(DB_FILE, index=False)
+                                st.success("Carga exitosa.")
+                                time.sleep(1)
                                 st.rerun()
                 except Exception as e:
                     st.error(f"Error: {e}")
 
         with tab2:
-            with st.form("man", clear_on_submit=True):
+            with st.form("registro_man", clear_on_submit=True):
                 c1, c2 = st.columns(2)
-                id_i = c1.text_input("ID")
+                id_i = c1.text_input("ID Cliente")
                 nom_i = c1.text_input("Nombre")
                 fac_i = c2.text_input("Factura")
                 mon_i = c2.number_input("Monto", min_value=0.0)
@@ -132,6 +126,8 @@ else:
                     p = str(int(mon_i // 100))
                     nueva = pd.DataFrame([[id_i, nom_i, fac_i, str(mon_i), p, str(date.today())]], columns=COLUMNAS_ESTANDAR)
                     pd.concat([df, nueva], ignore_index=True).to_csv(DB_FILE, index=False)
+                    st.success("Guardado.")
+                    time.sleep(1)
                     st.rerun()
 
         with tab3:
@@ -146,4 +142,4 @@ else:
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False)
-        st.download_button("📥 DESCARGAR BASE", buffer.getvalue(), "base.xlsx")
+        st.download_button("📥 DESCARGAR BASE", buffer.getvalue(), "base_puntos.xlsx")
