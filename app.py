@@ -50,12 +50,22 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
 opcion_staff = st.sidebar.checkbox("Acceder como Staff")
 
-# Inyectar fondo dinámico
+# --- APLICAR FONDO CON BLEND MODE (Opacidad forzada) ---
 opcion_actual = "Staff" if opcion_staff else opcion_cliente
 url_f = fondos.get(opcion_actual, fondos["🔍 Consultar Puntos"])
-st.markdown(f'<style>.stApp {{ background-image: url("{url_f}"); }}</style>', unsafe_allow_html=True)
 
-# --- 6. CLIENTE ---
+# Inyectamos el estilo directamente para asegurar que el blend-mode funcione
+st.markdown(f"""
+    <style>
+    .stApp {{
+        background-image: url("{url_f}") !important;
+        background-color: rgba(255, 255, 255, 0.7) !important;
+        background-blend-mode: overlay !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 6. LÓGICA DE NAVEGACIÓN (CLIENTE) ---
 if not opcion_staff:
     if opcion_cliente == "🔍 Consultar Puntos":
         st.subheader("Consulta tus puntos acumulados")
@@ -83,9 +93,9 @@ if not opcion_staff:
         URL_PDF = "https://www.wurth.com.uy/catalogo_premios.pdf" 
         st.link_button("🚀 ABRIR CATÁLOGO (PDF)", URL_PDF)
 
-# --- 7. STAFF ---
+# --- 7. LÓGICA DE STAFF ---
 else:
-    st.subheader("🔐 Panel Staff")
+    st.subheader("🔐 Panel Administrativo")
     password = st.text_input("Clave", type="password")
     if password.strip() == "089020011":
         st.success("Acceso concedido")
