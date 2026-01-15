@@ -13,15 +13,36 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILO VISUAL ---
+# --- ESTILO VISUAL Y CSS PERSONALIZADO ---
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stDeployButton {display:none;}
-    .stButton>button { background-color: #E60002; color: white; border-radius: 5px; width: 100%; font-weight: bold; }
-    .stMetric { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #E60002; }
+    
+    /* Agrandar tipografía del Menú Lateral */
+    [data-testid="stSidebarNav"] span {
+        font-size: 18px !important;
+        font-weight: 500;
+    }
+    
+    /* Estilo del botón rojo de la marca */
+    .stButton>button { 
+        background-color: #E60002; 
+        color: white; 
+        border-radius: 5px; 
+        width: 100%; 
+        font-weight: bold; 
+    }
+    
+    /* Estilo de las métricas de puntos */
+    .stMetric { 
+        background-color: #f0f2f6; 
+        padding: 15px; 
+        border-radius: 10px; 
+        border-left: 5px solid #E60002; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -38,122 +59,125 @@ def cargar_datos():
 
 df = cargar_datos()
 
-# --- MENÚ LATERAL ---
-st.sidebar.header("MENÚ PRINCIPAL")
-opcion = st.sidebar.radio("Seleccione una opción:", ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios", "🏬 Registro Staff"])
+# --- MENÚ LATERAL CONFIGURADO ---
+st.sidebar.markdown("# 🏆 CLIENTES")
+opcion_cliente = st.sidebar.radio("Menú de Usuario:", 
+    ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios"])
 
-# --- SECCIÓN: CONSULTAR PUNTOS ---
-if opcion == "🔍 Consultar Puntos":
-    st.subheader("Consulta tus puntos acumulados")
-    id_busqueda = st.text_input("Ingresa tu número de cliente").strip()
-    
-    if id_busqueda:
-        datos_cliente = df[df["ID_Cliente"] == id_busqueda]
-        if not datos_cliente.empty:
-            nombre = datos_cliente["Nombre_Cliente"].iloc[0]
-            puntos_num = pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0)
-            total = int(puntos_num.sum())
-            st.markdown(f"## ¡Hola, **{nombre}**!")
-            st.metric("Tu saldo actual es de:", f"{total} Puntos")
-            with st.expander("Ver historial de facturas"):
-                st.table(datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False))
-            st.balloons()
-        else:
-            st.warning("No se encontró el ID.")
+st.sidebar.markdown("---") # Divisor visual
 
-# --- SECCIÓN: REGISTRO STAFF ---
-elif opcion == "🏬 Registro Staff":
-    st.subheader("Panel Administrativo")
+st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
+opcion_staff = st.sidebar.checkbox("Acceder como Staff")
+
+# --- LÓGICA DE NAVEGACIÓN ---
+
+# Si NO marcó Staff, mostramos opciones de cliente
+if not opcion_staff:
+    if opcion_cliente == "🔍 Consultar Puntos":
+        st.subheader("Consulta tus puntos acumulados")
+        id_busqueda = st.text_input("Ingresa tu número de cliente").strip()
+        
+        if id_busqueda:
+            datos_cliente = df[df["ID_Cliente"] == id_busqueda]
+            if not datos_cliente.empty:
+                nombre = datos_cliente["Nombre_Cliente"].iloc[0]
+                puntos_num = pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0)
+                total = int(puntos_num.sum())
+                st.markdown(f"## ¡Hola, **{nombre}**!")
+                st.metric("Tu saldo actual es de:", f"{total} Puntos")
+                with st.expander("Ver historial de facturas"):
+                    st.table(datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False))
+                st.balloons()
+            else:
+                st.warning("No se encontró el ID. Por favor, verifica el número.")
+
+    elif opcion_cliente == "ℹ️ ¿De qué se trata?":
+        st.subheader("Información del Programa")
+        st.write("Bienvenido al programa de fidelidad de Würth Uruguay.")
+        st.markdown("""
+        * Por cada **$100** en compras, sumas **1 punto**.
+        * Los puntos tienen vigencia de 1 año.
+        * Canjea tus puntos por herramientas y premios exclusivos.
+        """)
+        st.link_button("📖 LEER REGLAMENTO COMPLETO", "https://github.com/wurth-fidelidad-uy/mis-puntos-app/blob/main/README.md")
+
+    elif opcion_cliente == "🎁 Ver Beneficios":
+        st.subheader("Beneficios y Premios")
+        st.write("Descubre todo lo que puedes canjear con tus puntos acumulados.")
+        st.link_button("🚀 VER CATÁLOGO DE PREMIOS", "https://www.wurth.com.uy/")
+
+# Si marcó Staff, mostramos panel administrativo
+else:
+    st.subheader("🔐 Panel Administrativo - Staff")
     password = st.text_input("Introduce la clave de seguridad", type="password")
     
     if password.strip() == "089020011":
         st.success("Acceso concedido")
         
-        # --- BLOQUE 1: CARGA MANUAL ---
-        with st.expander("➕ Carga Manual (Individual)", expanded=False):
-            with st.form("registro", clear_on_submit=True):
-                col1, col2 = st.columns(2)
-                id_c = col1.text_input("ID Cliente").strip()
-                nom = col1.text_input("Nombre del Cliente").strip()
-                fac = col2.text_input("Número de Factura").strip()
-                mon = col2.number_input("Monto de Compra ($)", min_value=0.0)
-                if st.form_submit_button("REGISTRAR PUNTOS"):
-                    if id_c and nom and fac and mon > 0:
-                        if fac in df['Nro_Factura'].values:
-                            st.error(f"Error: La factura {fac} ya existe.")
-                        else:
-                            puntos = str(int(mon // 100))
-                            nueva_fila = pd.DataFrame([[id_c, nom, fac, str(mon), puntos, str(date.today())]], columns=COLUMNAS_ESTANDAR)
-                            df_final = pd.concat([df, nueva_fila], ignore_index=True)
-                            df_final.to_csv(DB_FILE, index=False)
-                            st.success("✅ ¡Puntos registrados!")
-                            time.sleep(1)
-                            st.rerun()
-
-        # --- BLOQUE 2: CARGA MASIVA ---
-        with st.expander("📊 Carga Masiva (Archivo Excel)", expanded=True):
-            st.info("Asegúrate de que el Excel tenga las columnas: ID_Cliente, Nombre_Cliente, Nro_Factura, Monto_Compra")
-            archivo_excel = st.file_uploader("Sube el reporte de BI (.xlsx)", type=['xlsx'], key="uploader_bi")
-            
+        tab1, tab2, tab3 = st.tabs(["📊 Carga Masiva", "➕ Carga Manual", "🗑️ Gestionar Base"])
+        
+        with tab1:
+            st.info("Sube el reporte de BI en formato .xlsx")
+            archivo_excel = st.file_uploader("Seleccionar archivo", type=['xlsx'], key="bi_uploader")
             if archivo_excel:
                 try:
                     df_nuevo = pd.read_excel(archivo_excel, dtype=str)
                     columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
                     if all(col in df_nuevo.columns for col in columnas_req):
-                        # Limpiar duplicados del archivo entrante
                         df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
                         df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
                         df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
                         df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
                         df_nuevo['Fecha'] = str(date.today())
                         
-                        # Filtrar contra lo que ya hay en la base de datos
                         facturas_en_base = df['Nro_Factura'].values
                         df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_en_base)]
                         
                         if not df_filtrado.empty:
-                            st.write(f"Se detectaron {len(df_filtrado)} registros nuevos.")
                             st.dataframe(df_filtrado[COLUMNAS_ESTANDAR].head())
-                            if st.button("CONFIRMAR CARGA MASIVA"):
-                                with st.spinner('Procesando datos...'):
-                                    df_final = pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True)
-                                    df_final.to_csv(DB_FILE, index=False)
-                                    st.success("✅ ¡Carga masiva finalizada con éxito!")
-                                    st.balloons()
-                                    time.sleep(2)
-                                    st.rerun()
+                            if st.button("CONFIRMAR CARGA"):
+                                df_final = pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True)
+                                df_final.to_csv(DB_FILE, index=False)
+                                st.success("✅ Carga masiva exitosa.")
+                                st.balloons()
+                                time.sleep(2)
+                                st.rerun()
                         else:
-                            st.warning("Todas las facturas de este archivo ya están registradas.")
-                    else:
-                        st.error(f"El Excel no tiene el formato correcto. Columnas requeridas: {columnas_req}")
+                            st.warning("No hay datos nuevos.")
                 except Exception as e:
-                    st.error(f"Error al leer el archivo: {e}")
+                    st.error(f"Error: {e}")
 
-        # --- BLOQUE 3: GESTIÓN DE BASE ---
-        with st.expander("🗑️ Gestión de Registros (Ver y Borrar)"):
+        with tab2:
+            with st.form("registro_man", clear_on_submit=True):
+                col1, col2 = st.columns(2)
+                id_c = col1.text_input("ID Cliente")
+                nom = col1.text_input("Nombre")
+                fac = col2.text_input("Nro Factura")
+                mon = col2.number_input("Monto ($)", min_value=0.0)
+                if st.form_submit_button("REGISTRAR"):
+                    if id_c and nom and fac and mon > 0:
+                        if fac in df['Nro_Factura'].values:
+                            st.error("Factura ya existe.")
+                        else:
+                            puntos = str(int(mon // 100))
+                            nueva_fila = pd.DataFrame([[id_c, nom, fac, str(mon), puntos, str(date.today())]], columns=COLUMNAS_ESTANDAR)
+                            pd.concat([df, nueva_fila], ignore_index=True).to_csv(DB_FILE, index=False)
+                            st.success("Registrado.")
+                            time.sleep(1)
+                            st.rerun()
+
+        with tab3:
             if not df.empty:
-                st.write("Lista de registros actuales:")
                 st.dataframe(df)
-                idx_borrar = st.number_input("Escribe el número de índice (columna izquierda) para borrar", min_value=0, max_value=len(df)-1, step=1)
-                if st.button("ELIMINAR REGISTRO SELECCIONADO"):
-                    df_nuevo_base = df.drop(df.index[idx_borrar])
-                    df_nuevo_base.to_csv(DB_FILE, index=False)
-                    st.warning(f"Registro {idx_borrar} eliminado.")
-                    time.sleep(1)
+                idx = st.number_input("Índice a borrar", min_value=0, max_value=len(df)-1, step=1)
+                if st.button("ELIMINAR"):
+                    df.drop(df.index[idx]).to_csv(DB_FILE, index=False)
                     st.rerun()
             else:
-                st.info("La base de datos está actualmente vacía.")
+                st.info("Base vacía.")
 
         st.divider()
-        
-        # BOTÓN DE DESCARGA (Siempre visible)
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='Puntos_Wurth')
-        
-        st.download_button(
-            label="📥 DESCARGAR BASE COMPLETA (EXCEL)",
-            data=buffer.getvalue(),
-            file_name=f"base_puntos_{date.today()}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+            df.to_excel(writer, index=False)
+        st.download_button("📥 DESCARGAR EXCEL COMPLETO", buffer.getvalue(), f"base_puntos.xlsx")
