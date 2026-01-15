@@ -1,38 +1,36 @@
-/* 1. SEGURIDAD: OCULTAR MENÚS DE SISTEMA */
-#MainMenu, footer, .stDeployButton {
+/* 1. SEGURIDAD TOTAL: OCULTAR MENÚS DE SISTEMA Y MANAGE APP */
+#MainMenu, footer, header, .stDeployButton, [data-testid="stStatusWidget"] {
     visibility: hidden !important;
+    display: none !important;
 }
 
-/* 2. FONDO CON OPACIDAD FORZADA (Velo blanco al 70% para máxima legibilidad) */
+/* Bloquea específicamente el menú inferior de administración de Streamlit Cloud */
+.stAppViewerFooter, [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+    display: none !important;
+}
+
+/* 2. FONDO CON MEZCLA DE BLANCO (75% para claridad) */
 .stApp {
     background-size: cover !important;
     background-position: center !important;
     background-attachment: fixed !important;
-    /* La línea siguiente mezcla un color blanco semitransparente con la imagen */
-    background-blend-mode: overlay;
-    background-color: rgba(255, 255, 255, 0.7) !important;
+    background-blend-mode: overlay !important;
+    background-color: rgba(255, 255, 255, 0.75) !important;
 }
 
 /* 3. LIMPIEZA DE CUADRANTES */
 [data-testid="stVerticalBlock"] > div > div, 
-.stMetric, 
-.stTable, 
-.stTabs,
-[data-testid="stExpander"],
-.stForm {
+.stMetric, .stTable, .stTabs, [data-testid="stExpander"], .stForm {
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
 }
 
-/* 4. BOTÓN DE NAVEGACIÓN SIEMPRE VISIBLE */
-header[data-testid="stHeader"] {
-    background: transparent !important;
-}
-
+/* 4. BOTÓN DE NAVEGACIÓN (REGRESAR MENÚ) */
 button[data-testid="stBaseButton-headerNoPadding"] {
     background-color: #E60002 !important;
     color: white !important;
     border-radius: 50% !important;
     visibility: visible !important;
+    display: block !important;
 }
