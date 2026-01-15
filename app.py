@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CONEXIÓN CON EL ARCHIVO CSS EXTERNO ---
+# --- 2. CARGA DE CSS EXTERNO ---
 def load_css():
     if os.path.exists("style.css"):
         with open("style.css") as f:
@@ -29,7 +29,7 @@ fondos = {
     "Staff": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
 }
 
-# --- 4. CARGA DE LOGO Y DATOS ---
+# --- 4. LOGO Y DATOS ---
 if os.path.exists('logo_UY.png'):
     st.image('logo_UY.png', width=180)
 
@@ -43,19 +43,19 @@ def cargar_datos():
 
 df = cargar_datos()
 
-# --- 5. MENÚ LATERAL ---
+# --- 5. MENÚ ---
 st.sidebar.markdown("# 🏆 CLIENTES")
 opcion_cliente = st.sidebar.radio("Menú de Usuario:", ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios"])
 st.sidebar.markdown("---") 
 st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
 opcion_staff = st.sidebar.checkbox("Acceder como Staff")
 
-# Aplicar fondo dinámico
+# Inyectar fondo dinámico
 opcion_actual = "Staff" if opcion_staff else opcion_cliente
-url_fondo = fondos.get(opcion_actual, fondos["🔍 Consultar Puntos"])
-st.markdown(f'<style>.stApp {{ background-image: url("{url_fondo}"); }}</style>', unsafe_allow_html=True)
+url_f = fondos.get(opcion_actual, fondos["🔍 Consultar Puntos"])
+st.markdown(f'<style>.stApp {{ background-image: url("{url_f}"); }}</style>', unsafe_allow_html=True)
 
-# --- 6. LÓGICA DE NAVEGACIÓN CLIENTE ---
+# --- 6. CLIENTE ---
 if not opcion_staff:
     if opcion_cliente == "🔍 Consultar Puntos":
         st.subheader("Consulta tus puntos acumulados")
@@ -64,8 +64,7 @@ if not opcion_staff:
             datos_cliente = df[df["ID_Cliente"] == id_busqueda]
             if not datos_cliente.empty:
                 nombre = datos_cliente["Nombre_Cliente"].iloc[0]
-                puntos_num = pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0)
-                total = int(puntos_num.sum())
+                total = int(pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0).sum())
                 st.markdown(f"## ¡Hola, **{nombre}**!")
                 st.metric("Tu saldo actual es de:", f"{total} Puntos")
                 with st.expander("Ver historial de facturas"):
@@ -81,44 +80,39 @@ if not opcion_staff:
 
     elif opcion_cliente == "🎁 Ver Beneficios":
         st.subheader("Beneficios y Premios")
-        # Enlace directo al PDF (abrirá en pestaña nueva)
-        URL_PDF_CATALOGO = "https://www.wurth.com.uy/catalogo_premios.pdf" 
-        st.link_button("🚀 ABRIR CATÁLOGO (PDF)", URL_PDF_CATALOGO)
+        URL_PDF = "https://www.wurth.com.uy/catalogo_premios.pdf" 
+        st.link_button("🚀 ABRIR CATÁLOGO (PDF)", URL_PDF)
 
-# --- 7. LÓGICA DE STAFF ---
+# --- 7. STAFF ---
 else:
-    st.subheader("🔐 Panel Administrativo - Staff")
-    password = st.text_input("Clave de Seguridad", type="password")
+    st.subheader("🔐 Panel Staff")
+    password = st.text_input("Clave", type="password")
     if password.strip() == "089020011":
         st.success("Acceso concedido")
-        tab1, tab2, tab3 = st.tabs(["📊 Carga Masiva", "➕ Carga Manual", "🗑️ Gestión"])
+        t1, t2, t3 = st.tabs(["📊 Carga Masiva", "➕ Manual", "🗑️ Gestión"])
         
-        with tab1:
-            archivo_excel = st.file_uploader("Subir .xlsx", type=['xlsx'], key="bi_uploader")
-            if archivo_excel:
+        with t1:
+            archivo = st.file_uploader("Subir .xlsx", type=['xlsx'], key="up")
+            if archivo:
                 try:
-                    df_nuevo = pd.read_excel(archivo_excel, dtype=str)
-                    columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
-                    if all(col in df_nuevo.columns for col in columnas_req):
-                        df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
-                        df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
-                        df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
-                        df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
-                        df_nuevo['Fecha'] = str(date.today())
-                        df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(df['Nro_Factura'].values)]
-                        if not df_filtrado.empty:
-                            st.dataframe(df_filtrado[COLUMNAS_ESTANDAR].head())
-                            if st.button("CONFIRMAR CARGA"):
-                                df_final = pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True)
-                                df_final.to_csv(DB_FILE, index=False)
+                    df_n = pd.read_excel(archivo, dtype=str)
+                    if all(col in df_n.columns for col in ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]):
+                        df_n = df_n.drop_duplicates(subset=['Nro_Factura'])
+                        df_n['Puntos_Ganados'] = (pd.to_numeric(df_n['Monto_Compra'], errors='coerce').fillna(0) // 100).astype(int).astype(str)
+                        df_n['Fecha'] = str(date.today())
+                        df_f = df_n[~df_n['Nro_Factura'].isin(df['Nro_Factura'].values)]
+                        if not df_f.empty:
+                            st.dataframe(df_f[COLUMNAS_ESTANDAR].head())
+                            if st.button("CONFIRMAR"):
+                                pd.concat([df, df_f[COLUMNAS_ESTANDAR]], ignore_index=True).to_csv(DB_FILE, index=False)
                                 st.success("Carga exitosa.")
                                 time.sleep(1)
                                 st.rerun()
                 except Exception as e:
                     st.error(f"Error: {e}")
 
-        with tab2:
-            with st.form("registro_man", clear_on_submit=True):
+        with t2:
+            with st.form("manual", clear_on_submit=True):
                 c1, c2 = st.columns(2)
                 id_i = c1.text_input("ID Cliente")
                 nom_i = c1.text_input("Nombre")
@@ -128,11 +122,9 @@ else:
                     p = str(int(mon_i // 100))
                     nueva = pd.DataFrame([[id_i, nom_i, fac_i, str(mon_i), p, str(date.today())]], columns=COLUMNAS_ESTANDAR)
                     pd.concat([df, nueva], ignore_index=True).to_csv(DB_FILE, index=False)
-                    st.success("Guardado.")
-                    time.sleep(1)
                     st.rerun()
 
-        with tab3:
+        with t3:
             if not df.empty:
                 st.dataframe(df)
                 idx = st.number_input("Índice a borrar", min_value=0, max_value=len(df)-1, step=1)
@@ -144,4 +136,4 @@ else:
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False)
-        st.download_button("📥 DESCARGAR BASE", buffer.getvalue(), "base_puntos.xlsx")
+        st.download_button("📥 DESCARGAR BASE", buffer.getvalue(), "base.xlsx")
