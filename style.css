@@ -11,8 +11,8 @@
     transition: background-image 0.8s ease-in-out;
 }
 
-/* 3. CAPA DE TRANSPARENCIA GLOBAL SOBRE EL FONDO */
-/* Esto oscurece o aclara la imagen un poco para que el texto resalte, sin usar cajas */
+/* 3. CAPA DE OPACIDAD GLOBAL (VELO BLANCO AL 60%) */
+/* Esto genera la claridad necesaria para leer el texto sin cajas */
 .stApp::before {
     content: "";
     position: absolute;
@@ -20,11 +20,11 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.6); /* Transparencia blanca al 60% */
+    background-color: rgba(255, 255, 255, 0.6); /* 0.6 es el 60% de opacidad blanca */
     z-index: -1;
 }
 
-/* 4. ELIMINAR TODOS LOS RECUADROS Y BORDES */
+/* 4. ELIMINAR TODOS LOS RECUADROS Y SOMBRAS */
 [data-testid="stVerticalBlock"] > div > div, 
 .stMetric, 
 .stTable, 
@@ -36,7 +36,7 @@
     box-shadow: none !important;
 }
 
-/* 5. RECUPERAR BOTÓN DE MENÚ LATERAL */
+/* 5. BOTÓN DE MENÚ LATERAL SIEMPRE VISIBLE */
 header[data-testid="stHeader"] {
     background: transparent !important;
 }
