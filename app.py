@@ -51,7 +51,8 @@ st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
 opcion_staff = st.sidebar.checkbox("Acceder como Staff")
 
 # Aplicar fondo dinámico
-url_fondo = fondos["Staff"] if opcion_staff else fondos.get(opcion_cliente)
+opcion_actual = "Staff" if opcion_staff else opcion_cliente
+url_fondo = fondos.get(opcion_actual, fondos["🔍 Consultar Puntos"])
 st.markdown(f'<style>.stApp {{ background-image: url("{url_fondo}"); }}</style>', unsafe_allow_html=True)
 
 # --- 6. LÓGICA DE NAVEGACIÓN CLIENTE ---
@@ -80,6 +81,7 @@ if not opcion_staff:
 
     elif opcion_cliente == "🎁 Ver Beneficios":
         st.subheader("Beneficios y Premios")
+        # Enlace directo al PDF (abrirá en pestaña nueva)
         URL_PDF_CATALOGO = "https://www.wurth.com.uy/catalogo_premios.pdf" 
         st.link_button("🚀 ABRIR CATÁLOGO (PDF)", URL_PDF_CATALOGO)
 
