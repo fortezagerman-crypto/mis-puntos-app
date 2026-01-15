@@ -1,29 +1,19 @@
-/* 1. SEGURIDAD: OCULTAR SOLO LO QUE NO SIRVE */
+/* 1. SEGURIDAD: OCULTAR MENÚS DE SISTEMA */
 #MainMenu, footer, .stDeployButton {
     visibility: hidden !important;
 }
 
-/* 2. FONDO DINÁMICO CON VELO DE CLARIDAD (60%) */
+/* 2. FONDO CON OPACIDAD FORZADA (Velo blanco al 70% para máxima legibilidad) */
 .stApp {
     background-size: cover !important;
     background-position: center !important;
     background-attachment: fixed !important;
-    transition: background-image 0.8s ease-in-out;
+    /* La línea siguiente mezcla un color blanco semitransparente con la imagen */
+    background-blend-mode: overlay;
+    background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
-/* Este bloque es el que le da la neblina blanca a la imagen para poder leer */
-.stApp::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.6) !important;
-    z-index: -1;
-}
-
-/* 3. LIMPIEZA TOTAL: QUITAR CUADRANTES Y BORDES */
+/* 3. LIMPIEZA DE CUADRANTES */
 [data-testid="stVerticalBlock"] > div > div, 
 .stMetric, 
 .stTable, 
@@ -35,7 +25,7 @@
     box-shadow: none !important;
 }
 
-/* 4. BOTÓN DE MENÚ LATERAL (ROJO WÜRTH) */
+/* 4. BOTÓN DE NAVEGACIÓN SIEMPRE VISIBLE */
 header[data-testid="stHeader"] {
     background: transparent !important;
 }
