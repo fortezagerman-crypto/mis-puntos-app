@@ -1,9 +1,22 @@
-/* 1. SEGURIDAD: OCULTAR MENÚS DE SISTEMA */
-#MainMenu, footer, header, .stDeployButton {
+/* 1. SEGURIDAD: OCULTAR SOLO ELEMENTOS INTERNOS, PERO NO EL BOTÓN DE MENÚ */
+#MainMenu, footer, .stDeployButton {
     visibility: hidden !important;
 }
 
-/* 2. CONFIGURACIÓN DEL FONDO DINÁMICO */
+/* 2. RECUPERAR Y ESTILIZAR EL BOTÓN DEL MENÚ LATERAL (EL REGRESAR) */
+header[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
+button[data-testid="stBaseButton-headerNoPadding"] {
+    background-color: #E60002 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    padding: 5px !important;
+    visibility: visible !important;
+}
+
+/* 3. DISEÑO DEL FONDO DINÁMICO */
 .stApp {
     background-size: cover !important;
     background-position: center !important;
@@ -11,33 +24,32 @@
     transition: background-image 0.8s ease-in-out;
 }
 
-/* 3. CAPA DE OPACIDAD Y LEGIBILIDAD (Efecto Vidrio) */
-/* Aplicamos un fondo blanco semi-transparente a los bloques de contenido */
+/* 4. CAPA DE LEGIBILIDAD (VIDRIO ESMERILADO) */
 [data-testid="stVerticalBlock"] > div > div, 
 .stMetric, 
 .stTable, 
 .stTabs,
 [data-testid="stExpander"] {
-    background-color: rgba(255, 255, 255, 0.75) !important;
-    padding: 20px !important;
+    background-color: rgba(255, 255, 255, 0.85) !important;
+    padding: 25px !important;
     border-radius: 15px !important;
-    backdrop-filter: blur(8px) !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
     margin-bottom: 15px !important;
 }
 
-/* 4. AJUSTE DE BOTONES WÜRTH */
+/* 5. TIPOGRAFÍA DEL MENÚ LATERAL */
+[data-testid="stSidebarNav"] span {
+    font-size: 19px !important;
+    font-weight: 600 !important;
+    color: #333333 !important;
+}
+
+/* 6. ESTILO GENERAL DE BOTONES ROJOS */
 .stButton>button {
     background-color: #E60002 !important;
     color: white !important;
     border: none !important;
-    border-radius: 5px !important;
+    border-radius: 8px !important;
     font-weight: bold !important;
-    height: 3em !important;
-}
-
-/* 5. AJUSTE DE TEXTO EN EL MENÚ LATERAL */
-[data-testid="stSidebarNav"] span {
-    font-size: 18px !important;
-    font-weight: 600 !important;
 }
