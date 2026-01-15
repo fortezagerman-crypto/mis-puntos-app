@@ -1,20 +1,21 @@
-/* Bloqueo visual de menús internos (Seguridad) */
+/* OCULTAR MENÚS DE CONFIGURACIÓN Y DESPLIEGUE (SEGURIDAD) */
 #MainMenu, footer, header, .stDeployButton {
-    display: none !important;
+    visibility: hidden !important;
 }
 
-/* Fondo base de la aplicación */
+/* CONFIGURACIÓN DEL FONDO DINÁMICO */
 .stApp {
     background-size: cover;
-    background-attachment: fixed;
     background-position: center;
-    transition: background-image 0.5s ease-in-out;
+    background-attachment: fixed;
+    transition: background-image 0.8s ease-in-out;
 }
 
-/* Estilo para que el texto resalte sobre cualquier imagen */
-.stMarkdown div[data-testid="stMarkdownContainer"] {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 1.5rem;
+/* CONTENEDORES PARA QUE EL TEXTO SEA LEBIBLE */
+.stMarkdown div[data-testid="stMarkdownContainer"], .stTable, [data-testid="stMetric"] {
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 20px;
     border-radius: 12px;
+    backdrop-filter: blur(5px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
