@@ -5,49 +5,68 @@ import os
 import io
 import time
 
-# 1. CONFIGURACIÓN DE PÁGINA
+# 1. CONFIGURACIÓN DE SEGURIDAD Y PÁGINA
 st.set_page_config(
-    page_title="Puntos Würth",
+    page_title="Puntos Würth Uruguay",
     page_icon="logo_UY.png",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILO VISUAL Y CSS PERSONALIZADO ---
+# --- DISEÑO AVANZADO (CSS) ---
 st.markdown("""
     <style>
+    /* OCULTAR ELEMENTOS DE DESARROLLO (SEGURIDAD) */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stDeployButton {display:none;}
     
-    /* Agrandar tipografía del Menú Lateral */
+    /* FONDO DE LA APP */
+    .stApp {
+        background: linear-gradient(180deg, #ffffff 0%, #f4f4f4 100%);
+    }
+
+    /* AGRANDAR MENÚ LATERAL */
     [data-testid="stSidebarNav"] span {
-        font-size: 18px !important;
-        font-weight: 500;
+        font-size: 19px !important;
+        font-weight: 600 !important;
+        color: #333;
     }
     
-    /* Estilo del botón rojo de la marca */
+    /* ESTILO DE TARJETAS (CARD) PARA CONTENIDO */
+    .stMarkdown div[data-testid="stMarkdownContainer"] p {
+        font-size: 18px;
+    }
+    
+    /* BOTÓN ROJO WÜRTH */
     .stButton>button { 
-        background-color: #E60002; 
-        color: white; 
-        border-radius: 5px; 
-        width: 100%; 
-        font-weight: bold; 
+        background-color: #E60002 !important; 
+        color: white !important; 
+        border: none !important;
+        border-radius: 8px !important; 
+        height: 3em !important;
+        font-weight: bold !important;
+        transition: 0.3s;
     }
-    
-    /* Estilo de las métricas de puntos */
-    .stMetric { 
-        background-color: #f0f2f6; 
-        padding: 15px; 
-        border-radius: 10px; 
-        border-left: 5px solid #E60002; 
+    .stButton>button:hover {
+        background-color: #b30001 !important;
+        transform: scale(1.02);
+    }
+
+    /* MÉTRICA DE PUNTOS */
+    [data-testid="stMetricValue"] {
+        color: #E60002 !important;
+        font-size: 48px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
+# Logo centrado
 if os.path.exists('logo_UY.png'):
-    st.image('logo_UY.png', width=180)
+    col_logo1, col_logo2, col_logo3 = st.columns([1,1,1])
+    with col_logo2:
+        st.image('logo_UY.png', width=180)
 
 DB_FILE = "base_datos_puntos.csv"
 COLUMNAS_ESTANDAR = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra", "Puntos_Ganados", "Fecha"]
@@ -59,23 +78,22 @@ def cargar_datos():
 
 df = cargar_datos()
 
-# --- MENÚ LATERAL CONFIGURADO ---
-st.sidebar.markdown("# 🏆 CLIENTES")
-opcion_cliente = st.sidebar.radio("Menú de Usuario:", 
-    ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios"])
+# --- MENÚ LATERAL ---
+st.sidebar.image('logo_UY.png', width=150) if os.path.exists('logo_UY.png') else None
+st.sidebar.markdown("### 👤 SECCIÓN CLIENTES")
+opcion_cliente = st.sidebar.radio("Ir a:", ["🔍 Mi Saldo de Puntos", "ℹ️ Información", "🎁 Catálogo"])
 
-st.sidebar.markdown("---") # Divisor visual
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🔐 ACCESO RESTRINGIDO")
+opcion_staff = st.sidebar.checkbox("Ingreso Staff Würth")
 
-st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
-opcion_staff = st.sidebar.checkbox("Acceder como Staff")
-
-# --- LÓGICA DE NAVEGACIÓN ---
-
-# Si NO marcó Staff, mostramos opciones de cliente
+# --- LÓGICA DE CLIENTE ---
 if not opcion_staff:
-    if opcion_cliente == "🔍 Consultar Puntos":
-        st.subheader("Consulta tus puntos acumulados")
-        id_busqueda = st.text_input("Ingresa tu número de cliente").strip()
+    if opcion_cliente == "🔍 Mi Saldo de Puntos":
+        st.markdown("<h1 style='text-align: center; color: #333;'>¡Bienvenido!</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;'>Ingresa tu número de cliente para conocer tus beneficios.</p>", unsafe_allow_html=True)
+        
+        id_busqueda = st.text_input("", placeholder="Número de Cliente (ej: 123456)").strip()
         
         if id_busqueda:
             datos_cliente = df[df["ID_Cliente"] == id_busqueda]
@@ -83,101 +101,86 @@ if not opcion_staff:
                 nombre = datos_cliente["Nombre_Cliente"].iloc[0]
                 puntos_num = pd.to_numeric(datos_cliente["Puntos_Ganados"], errors='coerce').fillna(0)
                 total = int(puntos_num.sum())
-                st.markdown(f"## ¡Hola, **{nombre}**!")
-                st.metric("Tu saldo actual es de:", f"{total} Puntos")
-                with st.expander("Ver historial de facturas"):
+                
+                st.markdown(f"<h2 style='text-align: center;'>Hola, {nombre} 👋</h2>", unsafe_allow_html=True)
+                
+                col_m1, col_m2, col_m3 = st.columns([1,2,1])
+                with col_m2:
+                    st.metric("Puntos Acumulados", f"{total}")
+                
+                with st.expander("📄 Ver detalle de mis facturas"):
                     st.table(datos_cliente[["Fecha", "Nro_Factura", "Puntos_Ganados"]].sort_values(by="Fecha", ascending=False))
                 st.balloons()
             else:
-                st.warning("No se encontró el ID. Por favor, verifica el número.")
+                st.error("❌ El número de cliente no existe. Por favor, contacta a tu asesor comercial.")
 
-    elif opcion_cliente == "ℹ️ ¿De qué se trata?":
-        st.subheader("Información del Programa")
-        st.write("Bienvenido al programa de fidelidad de Würth Uruguay.")
+    elif opcion_cliente == "ℹ️ Información":
+        st.title("Programa de Puntos")
         st.markdown("""
-        * Por cada **$100** en compras, sumas **1 punto**.
-        * Los puntos tienen vigencia de 1 año.
-        * Canjea tus puntos por herramientas y premios exclusivos.
+        ### ¿Cómo sumar?
+        Por cada **$100** en tus facturas, sumas **1 punto** automáticamente.
+        
+        ### ¿Cuándo canjear?
+        Puedes realizar canjes en cualquier momento comunicándote con el Staff. Los puntos vencen a los 12 meses de la compra.
         """)
-        st.link_button("📖 LEER REGLAMENTO COMPLETO", "https://github.com/wurth-fidelidad-uy/mis-puntos-app/blob/main/README.md")
 
-    elif opcion_cliente == "🎁 Ver Beneficios":
-        st.subheader("Beneficios y Premios")
-        st.write("Descubre todo lo que puedes canjear con tus puntos acumulados.")
-        st.link_button("🚀 VER CATÁLOGO DE PREMIOS", "https://www.wurth.com.uy/")
+    elif opcion_cliente == "🎁 Catálogo":
+        st.title("Premios Disponibles")
+        st.info("Próximamente podrás ver el catálogo aquí mismo.")
+        st.link_button("🌐 Visitar Würth Uruguay", "https://www.wurth.com.uy/")
 
-# Si marcó Staff, mostramos panel administrativo
+# --- LÓGICA DE STAFF ---
 else:
-    st.subheader("🔐 Panel Administrativo - Staff")
-    password = st.text_input("Introduce la clave de seguridad", type="password")
+    st.markdown("<h2 style='color: #E60002;'>Acceso Administrativo</h2>", unsafe_allow_html=True)
+    password = st.text_input("Clave de Seguridad", type="password")
     
-    if password.strip() == "089020011":
-        st.success("Acceso concedido")
+    if password == "089020011":
+        st.success("Verificado correctamente")
         
-        tab1, tab2, tab3 = st.tabs(["📊 Carga Masiva", "➕ Carga Manual", "🗑️ Gestionar Base"])
+        tab_masiva, tab_manual, tab_base = st.tabs(["🚀 CARGA MASIVA", "✍️ MANUAL", "📂 BASE DATOS"])
         
-        with tab1:
-            st.info("Sube el reporte de BI en formato .xlsx")
-            archivo_excel = st.file_uploader("Seleccionar archivo", type=['xlsx'], key="bi_uploader")
-            if archivo_excel:
-                try:
-                    df_nuevo = pd.read_excel(archivo_excel, dtype=str)
-                    columnas_req = ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]
-                    if all(col in df_nuevo.columns for col in columnas_req):
-                        df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
-                        df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
-                        df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
-                        df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
-                        df_nuevo['Fecha'] = str(date.today())
-                        
-                        facturas_en_base = df['Nro_Factura'].values
-                        df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_en_base)]
-                        
-                        if not df_filtrado.empty:
-                            st.dataframe(df_filtrado[COLUMNAS_ESTANDAR].head())
-                            if st.button("CONFIRMAR CARGA"):
-                                df_final = pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True)
-                                df_final.to_csv(DB_FILE, index=False)
-                                st.success("✅ Carga masiva exitosa.")
-                                st.balloons()
-                                time.sleep(2)
-                                st.rerun()
-                        else:
-                            st.warning("No hay datos nuevos.")
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-        with tab2:
-            with st.form("registro_man", clear_on_submit=True):
-                col1, col2 = st.columns(2)
-                id_c = col1.text_input("ID Cliente")
-                nom = col1.text_input("Nombre")
-                fac = col2.text_input("Nro Factura")
-                mon = col2.number_input("Monto ($)", min_value=0.0)
-                if st.form_submit_button("REGISTRAR"):
-                    if id_c and nom and fac and mon > 0:
-                        if fac in df['Nro_Factura'].values:
-                            st.error("Factura ya existe.")
-                        else:
-                            puntos = str(int(mon // 100))
-                            nueva_fila = pd.DataFrame([[id_c, nom, fac, str(mon), puntos, str(date.today())]], columns=COLUMNAS_ESTANDAR)
-                            pd.concat([df, nueva_fila], ignore_index=True).to_csv(DB_FILE, index=False)
-                            st.success("Registrado.")
-                            time.sleep(1)
+        with tab_masiva:
+            archivo = st.file_uploader("Subir Excel de BI", type=['xlsx'])
+            if archivo:
+                df_nuevo = pd.read_excel(archivo, dtype=str)
+                # (Lógica de carga masiva que ya teníamos funcionando...)
+                if all(c in df_nuevo.columns for c in ["ID_Cliente", "Nombre_Cliente", "Nro_Factura", "Monto_Compra"]):
+                    df_nuevo = df_nuevo.drop_duplicates(subset=['Nro_Factura'])
+                    df_nuevo['Monto_Compra_Num'] = pd.to_numeric(df_nuevo['Monto_Compra'], errors='coerce').fillna(0)
+                    df_nuevo['Puntos_Ganados'] = (df_nuevo['Monto_Compra_Num'] // 100).astype(int).astype(str)
+                    df_nuevo['Monto_Compra'] = df_nuevo['Monto_Compra_Num'].astype(str)
+                    df_nuevo['Fecha'] = str(date.today())
+                    
+                    facturas_en_base = df['Nro_Factura'].values
+                    df_filtrado = df_nuevo[~df_nuevo['Nro_Factura'].isin(facturas_en_base)]
+                    
+                    if not df_filtrado.empty:
+                        st.dataframe(df_filtrado[COLUMNAS_ESTANDAR])
+                        if st.button("PROCESAR EXCEL"):
+                            pd.concat([df, df_filtrado[COLUMNAS_ESTANDAR]], ignore_index=True).to_csv(DB_FILE, index=False)
+                            st.success("¡Base actualizada!")
+                            time.sleep(2)
                             st.rerun()
+                    else: st.warning("No hay facturas nuevas.")
 
-        with tab3:
-            if not df.empty:
-                st.dataframe(df)
-                idx = st.number_input("Índice a borrar", min_value=0, max_value=len(df)-1, step=1)
-                if st.button("ELIMINAR"):
-                    df.drop(df.index[idx]).to_csv(DB_FILE, index=False)
+        with tab_manual:
+            with st.form("man"):
+                c1, c2 = st.columns(2)
+                id_i = c1.text_input("ID Cliente")
+                nom_i = c1.text_input("Nombre")
+                fac_i = c2.text_input("Factura")
+                mon_i = c2.number_input("Monto", min_value=0.0)
+                if st.form_submit_button("GUARDAR"):
+                    p = str(int(mon_i // 100))
+                    nueva = pd.DataFrame([[id_i, nom_i, fac_i, str(mon_i), p, str(date.today())]], columns=COLUMNAS_ESTANDAR)
+                    pd.concat([df, nueva], ignore_index=True).to_csv(DB_FILE, index=False)
                     st.rerun()
-            else:
-                st.info("Base vacía.")
 
-        st.divider()
-        buffer = io.BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False)
-        st.download_button("📥 DESCARGAR EXCEL COMPLETO", buffer.getvalue(), f"base_puntos.xlsx")
+        with tab_base:
+            st.dataframe(df)
+            buffer = io.BytesIO()
+            with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+                df.to_excel(writer, index=False)
+            st.download_button("📥 Descargar Base Completa", buffer.getvalue(), "puntos.xlsx")
+    elif password:
+        st.error("Contraseña incorrecta")
