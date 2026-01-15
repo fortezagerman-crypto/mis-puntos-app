@@ -1,4 +1,4 @@
-import streamlit st
+import streamlit as st
 import pandas as pd
 from datetime import date
 import os
@@ -13,8 +13,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- LÓGICA DE FONDOS DINÁMICOS Y DISEÑO ---
-# Definimos las imágenes para cada sección
+# --- 2. CONEXIÓN CON EL ARCHIVO CSS EXTERNO ---
+def load_css():
+    if os.path.exists("style.css"):
+        with open("style.css") as f:
+            st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+load_css()
+
+# --- 3. LÓGICA DE FONDOS DINÁMICOS ---
 fondos = {
     "🔍 Consultar Puntos": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070",
     "ℹ️ ¿De qué se trata?": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=2070",
@@ -22,54 +29,7 @@ fondos = {
     "Staff": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
 }
 
-# --- ESTILO VISUAL CSS (Incluye opacidad y bloqueo de menús) ---
-def aplicar_estilos(url_imagen):
-    st.markdown(f"""
-        <style>
-        /* Ocultar menús de sistema para seguridad */
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
-        .stDeployButton {{display:none;}}
-        
-        /* Fondo con imagen y opacidad mediante overlay */
-        .stApp {{
-            background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), 
-                        url("{url_imagen}");
-            background-size: cover;
-            background-attachment: fixed;
-        }}
-
-        /* Contenedores con efecto cristal para legibilidad */
-        [data-testid="stVerticalBlock"] > div > div {{
-            background-color: rgba(255, 255, 255, 0.6);
-            padding: 20px;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-        }}
-
-        /* Tipografía y botones */
-        [data-testid="stSidebarNav"] span {{ font-size: 18px !important; font-weight: 500; }}
-        
-        .stButton>button {{ 
-            background-color: #E60002; 
-            color: white; 
-            border-radius: 5px; 
-            width: 100%; 
-            font-weight: bold; 
-            border: none;
-        }}
-
-        .stMetric {{ 
-            background-color: rgba(240, 242, 246, 0.9); 
-            padding: 15px; 
-            border-radius: 10px; 
-            border-left: 5px solid #E60002; 
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-
-# --- BASE DE DATOS Y LOGO ---
+# --- 4. CARGA DE LOGO Y BASE DE DATOS ---
 if os.path.exists('logo_UY.png'):
     st.image('logo_UY.png', width=180)
 
@@ -83,7 +43,7 @@ def cargar_datos():
 
 df = cargar_datos()
 
-# --- MENÚ LATERAL ---
+# --- 5. MENÚ LATERAL ---
 st.sidebar.markdown("# 🏆 CLIENTES")
 opcion_cliente = st.sidebar.radio("Menú de Usuario:", 
     ["🔍 Consultar Puntos", "ℹ️ ¿De qué se trata?", "🎁 Ver Beneficios"])
@@ -93,13 +53,14 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("# ⚙️ ADMINISTRACIÓN")
 opcion_staff = st.sidebar.checkbox("Acceder como Staff")
 
-# Aplicar el fondo dinámico basado en la selección
+# Aplicar fondo dinámico (inyecta la URL al CSS de la app)
 url_actual = fondos["Staff"] if opcion_staff else fondos.get(opcion_cliente)
-aplicar_estilos(url_actual)
+st.markdown(f'<style>.stApp {{ background-image: url("{url_actual}"); }}</style>', unsafe_allow_html=True)
 
-# --- LÓGICA DE NAVEGACIÓN ---
+# --- 6. LÓGICA DE NAVEGACIÓN ---
 
 if not opcion_staff:
+    # --- SECCIÓN: CONSULTAR PUNTOS ---
     if opcion_cliente == "🔍 Consultar Puntos":
         st.subheader("Consulta tus puntos acumulados")
         id_busqueda = st.text_input("Ingresa tu número de cliente").strip()
@@ -118,6 +79,7 @@ if not opcion_staff:
             else:
                 st.warning("No se encontró el ID. Por favor, verifica el número.")
 
+    # --- SECCIÓN: INFORMACIÓN ---
     elif opcion_cliente == "ℹ️ ¿De qué se trata?":
         st.subheader("Información del Programa")
         st.write("Bienvenido al programa de fidelidad de Würth Uruguay.")
@@ -128,13 +90,15 @@ if not opcion_staff:
         """)
         st.link_button("📖 LEER REGLAMENTO COMPLETO", "https://github.com/wurth-fidelidad-uy/mis-puntos-app/blob/main/README.md")
 
+    # --- SECCIÓN: CATÁLOGO (PDF EXTERNO) ---
     elif opcion_cliente == "🎁 Ver Beneficios":
         st.subheader("Beneficios y Premios")
         st.write("Descubre todo lo que puedes canjear con tus puntos acumulados.")
-        # ESTE BOTÓN ABRE EL PDF EN PESTAÑA NUEVA
-        URL_PDF_CATALOGO = "https://www.wurth.com.uy/catalogo_premios.pdf" # Reemplazar por tu link real
+        # El st.link_button abre automáticamente en pestaña nueva (target="_blank")
+        URL_PDF_CATALOGO = "https://www.wurth.com.uy/catalogo_premios.pdf" 
         st.link_button("🚀 ABRIR CATÁLOGO DE BENEFICIOS (PDF)", URL_PDF_CATALOGO)
 
+# --- 7. LÓGICA DE STAFF ---
 else:
     st.subheader("🔐 Panel Administrativo - Staff")
     password = st.text_input("Introduce la clave de seguridad", type="password")
