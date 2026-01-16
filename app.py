@@ -24,7 +24,7 @@ load_css()
 # --- 3. DICCIONARIO DE FONDOS ---
 fondos = {
     "🔍 Consultar Puntos": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070",
-    "ℹ️ ¿De qué se trata?": "https://viewer.ipaper.io/wurth-uruguay/cupones/plataforma-de-puntos/",
+    "ℹ️ ¿De qué se trata?": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=2070", # Imagen de fondo
     "🎁 Ver Beneficios": "https://images.unsplash.com/photo-1530124560677-bbfda2f97a1d?q=80&w=2070",
     "Staff": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
 }
@@ -85,7 +85,7 @@ if not opcion_staff:
         st.subheader("Información del Programa")
         st.write("Bienvenido al sistema de beneficios de Würth Uruguay.")
         # BOTÓN A REGLAMENTO EXTERNO
-        URL_REGLAMENTO = "https://www.wurth.com.uy/reglamento_puntos.pdf" 
+        URL_REGLAMENTO = "https://viewer.ipaper.io/wurth-uruguay/cupones/plataforma-de-puntos/" 
         st.link_button("📖 LEER REGLAMENTO Y CONDICIONES", URL_REGLAMENTO)
 
     elif opcion_cliente == "🎁 Ver Beneficios":
