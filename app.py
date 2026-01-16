@@ -21,12 +21,12 @@ def load_css():
 
 load_css()
 
-# --- 3. DICCIONARIO DE FONDOS ---
+# --- 3. DICCIONARIO DE FONDOS (CORREGIDO PARA DRIVE) ---
 fondos = {
-    "🔍 Consultar Puntos": "https://drive.google.com/file/d/1hLq4Si9YA4YK_ozf4NvHKY9fCbTjkxit/view?usp=drive_link",
-    "ℹ️ ¿De qué se trata?": "https://drive.google.com/file/d/1p5y6G9GWvw3Eu-Ri1T1kXphuWctRNzny/view?usp=drive_link", # Imagen de fondo
-    "🎁 Ver Beneficios": "https://drive.google.com/file/d/19mYMD9ZrbQvqPr95GoDCGU4DL2sD0gng/view?usp=drive_link",
-    "Staff": "https://drive.google.com/file/d/1IimZmDhzxTlh1DoGTtYEuur1f4CdYBmO/view?usp=drive_link"
+    "🔍 Consultar Puntos": "https://lh3.googleusercontent.com/u/0/d/1hLq4Si9YA4YK_ozf4NvHKY9fCbTjkxit",
+    "ℹ️ ¿De qué se trata?": "https://lh3.googleusercontent.com/u/0/d/1p5y6G9GWvw3Eu-Ri1T1kXphuWctRNzny",
+    "🎁 Ver Beneficios": "https://lh3.googleusercontent.com/u/0/d/19mYMD9ZrbQvqPr95GoDCGU4DL2sD0gng",
+    "Staff": "https://lh3.googleusercontent.com/u/0/d/1IimZmDhzxTlh1DoGTtYEuur1f4CdYBmO"
 }
 
 # --- 4. CARGA DE LOGO Y DATOS ---
