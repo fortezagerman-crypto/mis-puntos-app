@@ -23,10 +23,10 @@ load_css()
 
 # --- 3. DICCIONARIO DE FONDOS ---
 fondos = {
-    "🔍 Consultar Puntos": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQAk5nkDzf_KS4mEd4sN8_5tAedTzTfzl7eY_wcQ0X4rGts?e=zDA4b3",
-    "ℹ️ ¿De qué se trata?": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQADYqxzcWb2QqR7hyZsrNLDAZ_0_ouHZ_k2wCx4TLLpMxk?e=YoCUlN", # Imagen de fondo
-    "🎁 Ver Beneficios": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQDEyLDwf2pcQo1dlj2IvN-jAQXZcQg9-VvrIcj48lhwwrI?e=8Pubhf",
-    "Staff": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQAk5nkDzf_KS4mEd4sN8_5tAedTzTfzl7eY_wcQ0X4rGts?e=zDA4b3"
+    "🔍 Consultar Puntos": "https://drive.google.com/file/d/1hLq4Si9YA4YK_ozf4NvHKY9fCbTjkxit/view?usp=drive_link",
+    "ℹ️ ¿De qué se trata?": "https://drive.google.com/file/d/1p5y6G9GWvw3Eu-Ri1T1kXphuWctRNzny/view?usp=drive_link", # Imagen de fondo
+    "🎁 Ver Beneficios": "https://drive.google.com/file/d/19mYMD9ZrbQvqPr95GoDCGU4DL2sD0gng/view?usp=drive_link",
+    "Staff": "https://drive.google.com/file/d/1IimZmDhzxTlh1DoGTtYEuur1f4CdYBmO/view?usp=drive_link"
 }
 
 # --- 4. CARGA DE LOGO Y DATOS ---
