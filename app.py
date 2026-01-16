@@ -23,10 +23,10 @@ load_css()
 
 # --- 3. DICCIONARIO DE FONDOS ---
 fondos = {
-    "🔍 Consultar Puntos": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070",
-    "ℹ️ ¿De qué se trata?": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=2070", # Imagen de fondo
-    "🎁 Ver Beneficios": "https://images.unsplash.com/photo-1530124560677-bbfda2f97a1d?q=80&w=2070",
-    "Staff": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
+    "🔍 Consultar Puntos": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQAk5nkDzf_KS4mEd4sN8_5tAedTzTfzl7eY_wcQ0X4rGts?e=zDA4b3",
+    "ℹ️ ¿De qué se trata?": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQADYqxzcWb2QqR7hyZsrNLDAZ_0_ouHZ_k2wCx4TLLpMxk?e=YoCUlN", # Imagen de fondo
+    "🎁 Ver Beneficios": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQDEyLDwf2pcQo1dlj2IvN-jAQXZcQg9-VvrIcj48lhwwrI?e=8Pubhf",
+    "Staff": "https://witglobal-my.sharepoint.com/:i:/g/personal/wn00263565_wgs_wuerth_com/IQAk5nkDzf_KS4mEd4sN8_5tAedTzTfzl7eY_wcQ0X4rGts?e=zDA4b3"
 }
 
 # --- 4. CARGA DE LOGO Y DATOS ---
