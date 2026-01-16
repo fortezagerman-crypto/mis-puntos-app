@@ -24,7 +24,7 @@ load_css()
 # --- 3. DICCIONARIO DE FONDOS ---
 fondos = {
     "🔍 Consultar Puntos": "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070",
-    "ℹ️ ¿De qué se trata?": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=2070",
+    "ℹ️ ¿De qué se trata?": "https://eur05.safelinks.protection.outlook.com/?url=https%3A%2F%2Fviewer.ipaper.io%2Fwurth-uruguay%2Fcupones%2Fplataforma-de-puntos%2F&data=05%7C02%7CGerman.Forteza%40wurth.com.uy%7C1bc915be0fb04928d6b808de54fabc00%7C45de56eae50543a5bd604957c8afc438%7C0%7C0%7C639041633325855187%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=63N7zUxa09AL8YTHk1JhHHV44WwEtZIh4eEyIzwlriw%3D&reserved=0",
     "🎁 Ver Beneficios": "https://images.unsplash.com/photo-1530124560677-bbfda2f97a1d?q=80&w=2070",
     "Staff": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
 }
