@@ -85,7 +85,7 @@ if not opcion_staff:
         st.subheader("Información del Programa")
         st.write("Bienvenido al sistema de beneficios de Würth Uruguay.")
         # BOTÓN A REGLAMENTO EXTERNO
-        URL_REGLAMENTO = "https://viewer.ipaper.io/wurth-uruguay/cupones/plataforma-de-puntos/" 
+        URL_REGLAMENTO = "https://viewer.ipaper.io/wurth-uruguay/plataforma-de-puntos1/bases-y-condiciones-world-cup/" 
         st.link_button("📖 LEER REGLAMENTO Y CONDICIONES", URL_REGLAMENTO)
 
     elif opcion_cliente == "🎁 Ver Beneficios":
